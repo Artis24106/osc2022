@@ -1,23 +1,37 @@
-# Operating Systems Capstone 2022
+# OSC 2022
 
-This repository is homework submission for students
+## Author
 
-## How to submit homework
+| 學號 | GitHub 帳號 | 姓名 | Email |
+| --- | ----------- | --- | --- |
+|`310551086`| `Artis24106` | `杜萬珩` | artis.hh.tu@gmail.com |
 
-1. Fork [this repository](https://github.com/oscapstone/osc2022) on GitHub 
-    ![](images/fork_button.png)
-2. Write down following info in your `README.md`
-    - GitHub account name
-    - Student ID
-    - Your name
-3. Design and implement your kernel in forked repository
-4. Create a GitHub pull request
-    - Choose `oscapstone/osc2022` as base repository and `{your student ID}` as base branch
-    - Choose branch in your forked repository as compare branch
-    - Name it with student ID and which lab e.g. `0856085 lab0`
-    ![](images/pull_request.png)
-5. We will accept pull request when lab due date
+## How to build
+> I develope on MacOS
 
-repeat 3-5 to submit later homework/lab.
+### Install Tollchains for MacOS
+- [messense/homebrew-macos-cross-toolchains](https://github.com/messense/homebrew-macos-cross-toolchains)
 
-## Happy Coding ~
+### Build kernel8.img
+```
+make
+```
+
+### Emulate with QEMU
+```
+make run
+```
+
+### Debug with QEMU and GDB
+Use port 1234 for remote debugging:
+```
+make debug
+```
+
+I use kali container to debug, and [hugsy/gef](https://github.com/hugsy/gef) is installed for better gdb debugging experence.
+In this case:
+```
+docker exec -it my_kali fish
+gdb-multiarch kernel8.elf
+gef-remote host.docker.internal:1234
+```
