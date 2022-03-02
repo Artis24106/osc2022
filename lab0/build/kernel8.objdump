@@ -1,0 +1,9 @@
+
+kernel8.elf:     file format elf64-littleaarch64
+
+
+Disassembly of section .text:
+
+0000000000080000 <_start>:
+   80000:	d503205f 	wfe
+   80004:	17ffffff 	b	80000 <_start>
