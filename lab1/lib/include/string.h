@@ -17,15 +17,4 @@ uint32_t strlen(const char *a) {
     return 0;
 }
 
-void hex(char *buf, uint32_t t) {
-    for (uint32_t i = 0; i < 8; i += 2) {
-        uint8_t msb = (t & 0xf0) >> 4,
-                lsb = t & 0xf;
-        buf[i] = (msb < 10) ? msb + '0' : (msb - 10) + 'a';
-        buf[i + 1] = (lsb < 10) ? lsb + '0' : (lsb - 10) + 'a';
-        t >>= 8;
-    }
-    buf[8] = '\0';
-}
-
 #endif
