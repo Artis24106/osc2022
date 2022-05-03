@@ -2,28 +2,17 @@ BUILD_DIR = ./build
 # Lib
 LIB_SRC_DIR = ../lib
 
-LIB_SRC = \
-	$(LIB_SRC_DIR)/cpio.c \
-	$(LIB_SRC_DIR)/mbox.c \
-	$(LIB_SRC_DIR)/reset.c \
-	$(LIB_SRC_DIR)/string.c \
-	$(LIB_SRC_DIR)/dtb.c \
-	$(LIB_SRC_DIR)/malloc.c \
-	$(LIB_SRC_DIR)/mmio.c \
-	$(LIB_SRC_DIR)/shell.c \
-	$(LIB_SRC_DIR)/uart.c \
-	$(LIB_SRC_DIR)/exec.c \
-	$(LIB_SRC_DIR)/printf.c \
-	$(LIB_SRC_DIR)/timer.c \
-	$(LIB_SRC_DIR)/exception.c \
-	$(LIB_SRC_DIR)/task.c \
-	$(LIB_SRC_DIR)/page_alloc.c \
+LIB_SRC := $(wildcard $(LIB_SRC_DIR)/*.c) 
+LIB_SRC := $(filter-out $(LIB_SRC_DIR)/uart_boot.c, $(LIB_SRC)) 
+
+LIB_ASM := $(wildcard $(LIB_SRC_DIR)/*.S)
 
 LIB_INCLUDES = \
 	-I $(LIB_SRC_DIR)/include \
 
 LIB_BUILD_DIR = $(LIB_SRC_DIR)/build/lib
 LIB_OBJS := $(patsubst %.c,$(LIB_BUILD_DIR)/%.o,$(notdir $(LIB_SRC)))
+LIB_OBJS += $(patsubst %.S,$(LIB_BUILD_DIR)/%_s.o,$(notdir $(LIB_ASM)))
 
 # Application
 APP_SRC_DIR = .
@@ -31,8 +20,7 @@ APP_SRC_DIR = .
 APP_SRC = \
 	$(APP_SRC_DIR)/main.c \
 
-APP_ASM = \
-	$(APP_SRC_DIR)/boot.S \
+APP_ASM = $(wildcard $(APP_SRC_DIR)/*.S) 
 
 APP_INCLUDES = \
 	-I ./ \
@@ -114,6 +102,7 @@ $(OUT_IMG): $(OUT_ELF)
 	@echo ' '
 
 $(BUILD_DIRECTORIES):
+	@echo $(OUT_OBJS)
 	mkdir -p $@
 
 clean:
