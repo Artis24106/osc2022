@@ -5,6 +5,7 @@ extern char _heap_start;
 static void* ptr = &_heap_start;
 static uint64_t kheap_space = 0;
 static tcache_perthread_struct_t tcache;
+static large_chunk_perthread_struct_t large_chunk;
 
 uint32_t get_tcache_idx(uint64_t chunk_size) {
     return (chunk_size - 0x20) / 0x10;
@@ -41,7 +42,9 @@ void* kmalloc(uint64_t size) {
     size = align(size, 0x10);
 
     // TODO: only support malloc size between 0x20 to 0x410
-    if (size < 0x20 || size > 0x410) {
+    if (size > 0x410) {
+        goto large_chunk_handling;
+    } else if (size < 0x20 || size > 0x410) {
         printf("[-] kmalloc -> chunk size 0x%X not supported." ENDL, size);
         while (1)
             ;
@@ -49,6 +52,7 @@ void* kmalloc(uint64_t size) {
 
     malloc_chunk_t* ret;  // ptr to chunk head
 
+tcache_handling:
     // TODO: try getting space from tcache
     uint32_t idx = get_tcache_idx(size);
     if (tcache.counts[idx]) {
@@ -57,13 +61,36 @@ void* kmalloc(uint64_t size) {
         ret = tcache.entries[idx];
 
         tcache.entries[idx] = ((tcache_entry_t*)((void*)tcache.entries[idx] + 0x10))->next;
+        // printf("TTTTT 0x%X\n", tcache.entries[idx] + 0x10);
+        // tcache.entries[idx] = container_of((void*)tcache.entries[idx] + 0x10, tcache_entry_t, next);
         tcache.entries[idx] = (void*)tcache.entries[idx] - 0x10;
         tcache.counts[idx] -= 1;
 
         show_tcache();
         goto kmalloc_end;
     }
+    goto malloc_new_space;
 
+large_chunk_handling:
+    // try getting space from large_chunk
+    large_chunk_entry_t *tmp = large_chunk.entry, *prev = NULL;
+    for (int i = 0; i < large_chunk.count; i++) {
+        if (tmp->chunk_size >= size) {  // found a chunk!!
+            ret = tmp;
+            if (prev != NULL) {
+                prev->next = tmp->next;
+            } else {
+                large_chunk.entry = tmp->next;
+            }
+            large_chunk.count -= 1;
+            goto kmalloc_end;
+        }
+        prev = tmp;
+        tmp = tmp->next;
+    }
+    goto malloc_new_space;
+
+malloc_new_space:
     // check if there is enough space to malloc
     if (size > kheap_space) {  // no space -> call page frame allocator to get more page!!
         renew_kheap_space(size);
@@ -89,7 +116,10 @@ void kfree(void* ptr) {
     malloc_chunk_t* chunk = ptr - sizeof(malloc_chunk_t);
     //printf("[+] chunk size to free -> 0x%X" ENDL, chunk->chunk_size);
 
-    if (chunk->chunk_size < 0x20 || chunk->chunk_size > 0x410) {
+    if (chunk->chunk_size > 0x410) {
+        goto free_large_chunk;
+    } else if (chunk->chunk_size < 0x20 || chunk->chunk_size > 0x410) {
+        // ddd();
         printf("[-] kfree -> chunk size 0x%X not supported." ENDL, chunk->chunk_size);
         while (1)
             ;
@@ -97,8 +127,8 @@ void kfree(void* ptr) {
     }
     uint32_t idx = get_tcache_idx(chunk->chunk_size);
 
+free_tcache:
     // insert into tcache.entries[idx]
-    ddd();
     if (tcache.entries[idx] != NULL) {
         ((tcache_entry_t*)ptr)->next = (void*)tcache.entries[idx] + sizeof(tcache_entry_t);
     } else {
@@ -106,7 +136,18 @@ void kfree(void* ptr) {
     }
     tcache.entries[idx] = chunk;
     tcache.counts[idx] += 1;
+    goto kfree_end;
 
+free_large_chunk:
+    if (large_chunk.entry != NULL) {
+        ((large_chunk_entry_t*)ptr)->next = (void*)large_chunk.entry + sizeof(large_chunk_entry_t);
+    } else {
+        ((large_chunk_entry_t*)ptr)->next = NULL;
+    }
+    large_chunk.entry = chunk;
+    large_chunk.count += 1;
+
+kfree_end:
     show_tcache();
     enable_interrupt();
 }

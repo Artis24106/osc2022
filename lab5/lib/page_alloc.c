@@ -80,7 +80,7 @@ void frame_init() {
             if (frame_list[fpn].is_used || frame_list[buddy].is_used) continue;
             frame_list[buddy].val = FRAME_IS_BUDDY;
             frame_list[fpn].val += 1;
-            printf("[+] 0x%X, 0x%X, 0x%X" ENDL, fpn, buddy, frame_list[fpn].val);
+            // printf("[+] 0x%X, 0x%X, 0x%X" ENDL, fpn, buddy, frame_list[fpn].val);
 
             // record the first modified fpn
             if (!modified) first_fpn = fpn;
@@ -89,7 +89,7 @@ void frame_init() {
         if (!modified) break;
         modified = false;
         inc <<= 1;
-        printf(ENDL);
+        // printf(ENDL);
     }
 
     // Initialize free_area
