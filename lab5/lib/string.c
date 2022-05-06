@@ -44,6 +44,10 @@ char *memcpy(void *dest, const void *src, uint64_t len) {
     return dest;
 }
 
+void memset(char *dest, char c, uint32_t size) {
+    for (uint32_t i = 0; i < size; i++) *dest++ = c;
+}
+
 char *strcpy(char *dest, char *src) {
     return memcpy(dest, src, strlen(src) + 1);
 }

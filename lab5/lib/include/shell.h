@@ -7,9 +7,9 @@
 #include "mbox.h"
 #include "printf.h"
 #include "reset.h"
+#include "sched.h"
 #include "string.h"
 #include "timer.h"
-// #include "uart.h"
 
 struct func {
     char* name;

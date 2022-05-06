@@ -3,10 +3,15 @@
 #include "dtb.h"
 #include "page_alloc.h"
 #include "printf.h"
+#include "sched.h"
 #include "uart.h"
 
-void ggggg() {
-    printf("GGGG" ENDL);
+void foo() {
+    for (int i = 0; i < 10; i++) {
+        printf("Thread id: %d %d\n", get_current(), i);
+        delay(1000000);
+        schedule();
+    }
 }
 
 void test() {
@@ -41,8 +46,17 @@ void kernel_main(char* x0) {
     dtb_init(x0);
     enable_interrupt();
 
-    test();
+    main_thread_init();
 
+    for (int i = 0; i < 3; i++) {
+        create_kern_task(foo, NULL);
+    }
+
+    // printf("[+] idle start\n");
+
+    idle();
+
+    // No shell anymore QQ
     // start the shell!!
-    shell();
+    // shell();
 }

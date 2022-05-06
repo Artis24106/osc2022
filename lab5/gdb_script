@@ -1,3 +1,3 @@
 gef-remote host.docker.internal:1234
-b ddd
+b main_thread_init
 c

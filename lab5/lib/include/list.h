@@ -8,6 +8,11 @@
 
 // Ref: https://github.com/torvalds/linux/blob/master/tools/include/linux/list.h
 
+#define offsetof(type, member) ((uint64_t) & ((type *)0)->member)
+#define container_of(ptr, type, member) ({             \
+    const typeof(((type *)0)->member) *__mptr = (ptr); \
+    (type *)((char *)__mptr - offsetof(type, member)); \
+})
 /*
  * Simple doubly linked list implementation.
  *

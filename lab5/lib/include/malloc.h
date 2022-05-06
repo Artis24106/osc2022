@@ -4,6 +4,7 @@
 #include <stdint.h>
 
 #include "exception.h"
+#include "list.h"
 #include "page_alloc.h"
 
 #define TCACHE_MAX_BINS 64
@@ -31,12 +32,23 @@ typedef struct tcache_entry {
     struct tcache_perthread_struct* key;
 } tcache_entry_t;
 
+typedef struct large_chunk_entry {
+    struct large_chunk_entry* next;
+    uint64_t chunk_size;
+} large_chunk_entry_t;
+
 // TCACHE_MAX_BINS = 64
 // which stores 0x20 ~ 0x410 chunk size
 typedef struct tcache_perthread_struct {
     uint16_t counts[TCACHE_MAX_BINS];
     tcache_entry_t* entries[TCACHE_MAX_BINS];
 } tcache_perthread_struct_t;
+
+// chunk with size larger than 0x410
+typedef struct large_chunk_perthread_struct {
+    uint16_t count;
+    large_chunk_entry_t* entry;
+} large_chunk_perthread_struct_t;
 
 uint32_t get_tcache_idx(uint64_t chunk_size);
 void renew_kheap_space(uint64_t size);
