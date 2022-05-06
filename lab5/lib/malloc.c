@@ -31,7 +31,7 @@ void init_tcache() {
 }
 
 void* kmalloc(uint64_t size) {
-    disable_interrupt();
+    disable_intr();
     // The smallest chunk size is 0x20 -> at least 0x18 can be used
     //if (size < 0x18) size = 0x18;
     size += 0x8;
@@ -106,13 +106,13 @@ malloc_new_space:
 
 kmalloc_end:
     //printf("[+] kmalloc: ptr -> 0x%X, space -> 0x%X" ENDL, ptr, kheap_space);
-    enable_interrupt();
+    enable_intr();
     //printf("[+] kmalloc(0x%X) @ 0x%X" ENDL, size, ret);
     return (void*)ret + sizeof(malloc_chunk_t);  // return the data ptr
 }
 
 void kfree(void* ptr) {
-    disable_interrupt();
+    disable_intr();
     malloc_chunk_t* chunk = ptr - sizeof(malloc_chunk_t);
     //printf("[+] chunk size to free -> 0x%X" ENDL, chunk->chunk_size);
 
@@ -149,7 +149,7 @@ free_large_chunk:
 
 kfree_end:
     show_tcache();
-    enable_interrupt();
+    enable_intr();
 }
 
 void show_tcache() {

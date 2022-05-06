@@ -44,7 +44,7 @@ void read_cmd() {
                 break;
             default:
                 buf[buf_idx++] = tmp;
-                _putchar(tmp);
+                uart_write(tmp);
                 break;
         }
     }

@@ -47,7 +47,7 @@
 void irq_handler();
 void invalid_handler();
 void sync_handler();
-void enable_interrupt();
-void disable_interrupt();
+void enable_intr();
+void disable_intr();
 
 #endif

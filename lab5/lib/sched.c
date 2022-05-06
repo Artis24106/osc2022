@@ -18,23 +18,27 @@ void idle() {
 }
 
 void kill_zombies() {
+    disable_intr();
+
+    task_struct_t *curr, *temp;
+    list_for_each_entry_safe(curr, temp, &dq, node) {  // `safe` is needed when deleting nodes
+        list_del(&curr->node);
+        if (curr->user_stack) kfree(curr->user_stack);
+        kfree(curr->kernel_stack);
+        kfree(&curr->node);
+
+        dq_len -= 1;
+    }
+
+    enable_intr();
 }
 
 void schedule() {
     if (rq_len == 1) return;  // scheduling is not necessary
 
     // get next task
-    task_struct_t* next = next_task(get_current());
-    // do {
-    //     // simply choose the next task
-    //     next = container_of(next->node.next, task_struct_t, node);
-
-    //     // however, should never choose the main task or the current task
-    // } while (&next->node == &rq || next == get_current());
-
-    // printf("Choosen node: 0x%X 0x%X\n", next, &next->info);
-    // printf("Current node: 0x%X 0x%X\n", get_current(), &get_current()->info);
-    switch_to(get_current(), &next->info);
+    task_struct_t* next = next_task(current);
+    switch_to(current, &next->info);
 }
 
 void main_thread_init() {
@@ -63,7 +67,7 @@ void thread_release(task_struct_t* target, int16_t ec) {
     target->exit_code = ec;
     target->status = DEAD;
 
-    disable_interrupt();
+    disable_intr();
 
     task_struct_t* next = next_task(target);
 
@@ -77,11 +81,11 @@ void thread_release(task_struct_t* target, int16_t ec) {
     dq_len += 1;
 
     // if the current task is dead, switch to the next task
-    if (target == get_current()) {
-        enable_interrupt();
+    if (target == current) {
+        enable_intr();
         switch_to(target, next);
     } else {
-        enable_interrupt();
+        enable_intr();
     }
 }
 
@@ -92,7 +96,7 @@ task_struct_t* next_task(task_struct_t* curr) {
         next = container_of(next->node.next, task_struct_t, node);
 
         // however, should never choose the main task or the current task
-    } while (&next->node == &rq || next == get_current());
+    } while (&next->node == &rq || next == current);
     return next;
 }
 
@@ -103,7 +107,7 @@ uint32_t create_kern_task(void (*func)(), void* arg) {
     task->pid = 0;
     task->status = STOPPED;
     task->prio = 2;
-    task->user_stack = 0;
+    task->user_stack = NULL;
 
     // store function addr and args
     info->x19 = func;
@@ -120,10 +124,10 @@ uint32_t create_kern_task(void (*func)(), void* arg) {
     //  -> func(argv)
     info->lr = _thread_trampoline;  // link register -> hold the return address
 
-    disable_interrupt();
+    disable_intr();
     list_add_tail(&task->node, &rq);
     rq_len += 1;
-    enable_interrupt();
+    enable_intr();
 }
 
 task_struct_t* new_task() {
@@ -133,15 +137,29 @@ task_struct_t* new_task() {
     INIT_LIST_HEAD(&task->node);
     return task;
 }
+
 void thread_trampoline(void (*func)(), void* argv) {
     func(argv);
-    thread_release(get_current(), 0);
+    thread_release(current, EX_OK);
 }
 
-void show_rq() {
+void show_q() {
     task_struct_t* curr;
+    printf("rq: ");
     list_for_each_entry(curr, &rq, node) {
         printf("0x%X -> ", curr->prio);
     }
     printf("\n");
+
+    printf("wq: ");
+    list_for_each_entry(curr, &wq, node) {
+        printf("0x%X -> ", curr->prio);
+    }
+    printf("\n");
+
+    printf("dq: ");
+    list_for_each_entry(curr, &dq, node) {
+        printf("0x%X -> ", curr->prio);
+    }
+    printf("\n\n");
 }

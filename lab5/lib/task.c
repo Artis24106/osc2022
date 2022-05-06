@@ -18,12 +18,11 @@ void run_task() {
     ((void (*)())((task_event_t*)task_event_list->next)->callback)();
 
     // remove the first event
-    disable_interrupt();  // critical section
-    list_rotate_left(task_event_list);
-    void* ptr_bk = task_event_list->prev;  // !! backup the ptr
-    list_del(task_event_list->prev);
-    kfree(ptr_bk);
-    enable_interrupt();  // end of critical section
+    disable_intr();  // critical section
+    void* bk = task_event_list->next;
+    list_del(task_event_list->next);
+    kfree(bk);
+    enable_intr();  // end of critical section
 
     // TODO: maybe handle the next task?
 }
@@ -36,26 +35,26 @@ void add_task(void* callback, uint32_t priority) {
     new_task_event->callback = callback;
     new_task_event->priority = priority;
 
-    disable_interrupt();  // critical section
-    struct list_head* curr;
+    disable_intr();  // critical section
+    task_event_t* curr;
     bool inserted = false;
-    list_for_each(curr, task_event_list) {
-        if (new_task_event->priority < ((task_event_t*)curr)->priority) {
-            list_add(&new_task_event->node, curr->prev);
+    list_for_each_entry(curr, task_event_list, node) {
+        if (new_task_event->priority < curr->priority) {
+            list_add(&new_task_event->node, curr->node.prev);
             inserted = true;
         }
     }
     if (!inserted) list_add_tail(&new_task_event->node, task_event_list);
-    //show_task_list();
-    enable_interrupt();  // end of critical section
+    // show_task_list();
+    enable_intr();  // end of critical section
 }
 
 void show_task_list() {
-    struct list_head* curr;
+    task_event_t* curr;
     bool inserted = false;
     printf("show_task_list()" ENDL);
-    list_for_each(curr, task_event_list) {
-        printf("0x%lX -> ", ((task_event_t*)curr)->priority);
+    list_for_each_entry(curr, task_event_list, node) {
+        printf("0x%lX -> ", curr->priority);
     }
     printf(ENDL);
 }

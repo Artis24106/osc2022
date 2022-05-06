@@ -37,7 +37,7 @@ void read_cmd() {
                 break;
             default:
                 buf[buf_idx++] = tmp;
-                _putchar(tmp);
+                uart_write(tmp);
                 break;
         }
     }
@@ -67,7 +67,7 @@ uint64_t get_arg(uint64_t i) {
 void cmd_help(char* param) {
     for (uint32_t i = 0; i < sizeof(func_list) / sizeof(struct func); i++) {
         printf(func_list[i].name);
-        for (uint32_t j = 0; j < (10 - strlen(func_list[i].name)); j++) _putchar(' ');
+        for (uint32_t j = 0; j < (10 - strlen(func_list[i].name)); j++) uart_write(' ');
         printf(": %s" ENDL, func_list[i].desc);
     }
 }
@@ -130,7 +130,7 @@ void cmd_unknown() {
 
 void shell() {
     cpio_init();
-    enable_core_timer();
+    enable_timer();
     welcome_msg();
     do {
         read_cmd();

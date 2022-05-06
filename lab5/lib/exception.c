@@ -9,10 +9,11 @@ void irq_handler() {
     // [ Lab3 - AD2 ] 2. move data from the device’s buffer through DMA, or manually copy,
     // TODO: necessary???
     // printf("[START] irq_handler()" ENDL);
+
     // [ Lab3 - AD2 ] 3. enqueues the processing task to the event queue,
     // classify the interrupt type, and call add_task()
     if (c0_int_src & SRC_CNTPNSIRQ_INT) {
-        core_timer_handler();
+        timer_handler();
     } else {  // TODO: better condition
         uart_int_handler();
     }
@@ -38,10 +39,10 @@ void sync_handler() {  // handle svc0
     printf("0x%lX, 0x%lX, 0x%lX\r\n", spsr_el1, elr_el1, esr_el1);
 }
 
-void enable_interrupt() {
+void enable_intr() {
     asm volatile("msr DAIFClr, 0xf");
 }
 
-void disable_interrupt() {
+void disable_intr() {
     asm volatile("msr DAIFSet, 0xf");
 }

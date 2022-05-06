@@ -17,6 +17,11 @@ char *strchr(const char *str, int ch);
 uint32_t atoi(const char *nptr);
 
 // TODO: move to other .h file
+#define read_sysreg(reg) ({          \
+    uint64_t _val;                   \
+    __asm__ volatile("mrs x0, " #reg \
+                     : "=r"(_val));  \
+                    _val; })
 #define write_sysreg(reg, _val) ({ __asm__ volatile("msr " #reg ", %0" ::"rZ"(_val)); })
 
 #endif

@@ -8,13 +8,13 @@ uint32_t __find_buddy_pfn(uint32_t page_fpn, uint32_t order) {
 }
 
 void show_free_area() {
-    struct list_head* curr;
+    frame_t* curr;
     printf(ENDL "----- show_free_area()" ENDL);
     for (uint32_t order = 0; order < MAX_ORDER + 1; order++) {
         if (list_empty(&free_area[order].free_list)) continue;
         printf("%d : ", order);
-        list_for_each(curr, &free_area[order].free_list) {
-            printf("(%d, %d) ", ((frame_t*)curr)->page_fpn, ((frame_t*)curr)->val);
+        list_for_each_entry(curr, &free_area[order].free_list, node) {
+            printf("(%d, %d) ", curr->page_fpn, curr->val);
             if (!list_is_last(curr, &free_area[order].free_list)) printf("-> ");
         }
         printf(ENDL);
@@ -148,11 +148,11 @@ void* frame_alloc(uint32_t fp) {
 
 void frame_free(void* addr) {
     uint32_t fpn = addr2fpn(addr);
-    frame_t* frame = &frame_list[fpn];
-    struct list_head* curr;
+    frame_t *frame = &frame_list[fpn],
+            *curr;
 
 #ifdef DEBUG_PAGE_ALLOC
-    printf("[DEBUG] frame_free(%d)" ENDL, fpn);
+    printf("--------------[DEBUG] frame_free(%d)" ENDL, fpn);
 #endif
 
     // check if the frame can be freed
@@ -181,10 +181,10 @@ void frame_free(void* addr) {
         if (buddy < min_fpn) min_fpn = buddy;
 
         // remove the buddy from freelist
-        list_for_each(curr, &free_area[curr_val].free_list) {
-            if (((frame_t*)curr)->page_fpn == buddy) {
-                ((frame_t*)curr)->val = 0;  // TODO:
-                list_del(curr);
+        list_for_each_entry(curr, &free_area[curr_val].free_list, node) {
+            if (curr->page_fpn == buddy) {
+                curr->val = 0;  // TODO:
+                list_del(&curr->node);
                 break;
             }
         }

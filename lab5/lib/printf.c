@@ -18,7 +18,7 @@ int printf(char *fmt, ...) {
     int count = vsprintf(s, fmt, args);
     // print out as usual
     while (*s) {
-        _putchar(*s++);
+        uart_write(*s++);
     }
     __builtin_va_end(args);
     return count;
@@ -35,7 +35,7 @@ int async_printf(char *fmt, ...) {
     int count = vsprintf(s, fmt, args);
     // print out as usual
     while (*s) {
-        _async_putchar(*s++);
+        async_uart_write(*s++);
     }
     __builtin_va_end(args);
     return count;

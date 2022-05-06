@@ -7,6 +7,11 @@
 
 #define THREAD_STACK_SIZE 0x2000  // TODO: why
 
+// exit code
+#define EX_OK 0
+#define EX_KILLED 1
+#define EX_SIG_BASE 128
+
 typedef struct thread_info {
     uint64_t x19;  // callee saved register
     uint64_t x20;
@@ -51,6 +56,7 @@ extern struct list_head rq, wq, dq;
 
 extern void switch_to(void* prev, void* next);
 extern task_struct_t* get_current();
+#define current get_current()
 
 void idle();
 void kill_zombies();
@@ -66,6 +72,6 @@ task_struct_t* new_task();
 void _thread_trampoline();
 void thread_trampoline(void (*func)(), void* argv);
 
-void show_rq();
+void show_q();
 
 #endif

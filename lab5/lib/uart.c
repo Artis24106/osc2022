@@ -76,12 +76,12 @@ void uart_init() {
     uart_flush();
 }
 
-void _putchar(char c) {
+void uart_write(char c) {
     while (!(mmio_read(AUX_MU_LSR_REG) & (1 << 5))) delay(1);
     mmio_write(AUX_MU_IO_REG, c);
 }
 
-void _async_putchar(char c) {
+void async_uart_write(char c) {
     while ((tx_buf_tail + 1) % MAX_BUF_SIZE == tx_buf_head) uart_enable_int(TX);  // wait, while tx_buf is full
 
     tx_buf[tx_buf_tail++] = c;
@@ -111,7 +111,7 @@ void uart_flush() {
 
 void uart_write_string(char* str) {
     for (uint32_t i = 0; str[i] != '\0'; i++) {
-        _putchar((char)str[i]);
+        uart_write((char)str[i]);
     }
 }
 
@@ -123,13 +123,13 @@ void uart_puth(uint32_t d) {
         c = (d >> i) & 0xF;
         /* Translate to hex */
         c = (c > 9) ? (0x37 + c) : (0x30 + c);
-        _putchar(c);
+        uart_write(c);
     }
 }
 
 void uart_putc(char* buf, uint32_t size) {
     for (uint32_t i = 0; i < size; i++) {
-        _putchar(buf[i]);
+        uart_write(buf[i]);
     }
 }
 
@@ -171,7 +171,7 @@ void uart_write_callback() {
         uart_disable_int(TX);
         return;
     }
-    _putchar(tx_buf[tx_buf_head++]);
+    uart_write(tx_buf[tx_buf_head++]);
     tx_buf_head %= MAX_BUF_SIZE;
 
     // [ Lab3 - AD2 ] 5. unmasks the interrupt line to get the next interrupt at the end of the task.

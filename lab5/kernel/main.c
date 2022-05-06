@@ -15,16 +15,16 @@ void foo() {
 }
 
 void test() {
-    // void* a = frame_alloc(1);
-    // void* b = frame_alloc(2);
-    // void* c = frame_alloc(1);
-    // void* d = frame_alloc(1);
-    // frame_free(b);
-    // frame_free(c);
-    // frame_free(d);
-    // frame_free(a);
+    void* a = frame_alloc(1);
+    frame_free(a);
+    void* b = frame_alloc(2);
+    void* c = frame_alloc(1);
+    void* d = frame_alloc(1);
+    frame_free(b);
+    frame_free(c);
+    frame_free(d);
 
-    uint32_t c = 0x20;
+    // uint32_t c = 0x20;
 }
 
 void kernel_main(char* x0) {
@@ -44,15 +44,13 @@ void kernel_main(char* x0) {
 
     // initialize dtb
     dtb_init(x0);
-    enable_interrupt();
 
+    enable_intr();
     main_thread_init();
 
     for (int i = 0; i < 3; i++) {
         create_kern_task(foo, NULL);
     }
-
-    // printf("[+] idle start\n");
 
     idle();
 

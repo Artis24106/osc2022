@@ -12,8 +12,8 @@
 #define TX (1 << 1)  // write
 
 void uart_init();
-void _putchar(char c);
-void _async_putchar(char c);
+void uart_write(char c);
+void async_uart_write(char c);
 void uart_read(char* buf, uint32_t size);
 void async_uart_read(char* buf, uint32_t size);
 void uart_flush();
