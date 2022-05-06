@@ -46,15 +46,16 @@ void kernel_main(char* x0) {
     dtb_init(x0);
 
     enable_intr();
-    main_thread_init();
 
-    for (int i = 0; i < 3; i++) {
-        create_kern_task(foo, NULL);
-    }
+    // main_thread_init();
 
-    idle();
+    // for (int i = 0; i < 3; i++) {
+    //     create_kern_task(foo, NULL);
+    // }
+
+    // idle();
 
     // No shell anymore QQ
     // start the shell!!
-    // shell();
+    shell();
 }

@@ -21,7 +21,7 @@ void timer_handler() {
 void timer_callback() {
     // if there is no timer event, set a huge expire time
     if (list_empty(timer_event_list)) {
-        printf("[+] timer_event_list is empty" ENDL);
+        // printf("[+] timer_event_list is empty" ENDL);
         set_timeout_rel(65535);
         enable_timer();
         return;
@@ -31,6 +31,7 @@ void timer_callback() {
     timer_event_t* target = container_of(timer_event_list->next, timer_event_t, node);
     target->callback(target->args);
 
+    disable_timer();
     // remove the first event
     void* bk = timer_event_list->next;
     list_del(timer_event_list->next);
@@ -44,7 +45,7 @@ void timer_callback() {
         set_timeout_abs(target->tval);
     }
 
-    show_timer_list();
+    // show_timer_list();
     // [ Lab3 - AD2 ] 5. unmasks the interrupt line to get the next interrupt at the end of the task.
     enable_timer();
 }
@@ -84,7 +85,6 @@ void add_timer(void* callback, char* args, uint64_t timeout) {
         is_first_node = false;
     }
     if (!inserted) list_add_tail(&t_event->node, timer_event_list);
-
     // if the first element is updated, should renew the timeout
     if (is_first_node) set_timeout_abs(t_event->tval);
 }
