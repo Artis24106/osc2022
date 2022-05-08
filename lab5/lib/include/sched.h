@@ -28,6 +28,45 @@ typedef struct thread_info {
     uint64_t sp;
 } thread_info_t;
 
+typedef struct trap_frame {
+    uint64_t x0;
+    uint64_t x1;
+    uint64_t x2;
+    uint64_t x3;
+    uint64_t x4;
+    uint64_t x5;
+    uint64_t x6;
+    uint64_t x7;
+    uint64_t x8;
+    uint64_t x9;
+    uint64_t x10;
+    uint64_t x11;
+    uint64_t x12;
+    uint64_t x13;
+    uint64_t x14;
+    uint64_t x15;
+    uint64_t x16;
+    uint64_t x17;
+    uint64_t x18;
+    uint64_t x19;
+    uint64_t x20;
+    uint64_t x21;
+    uint64_t x22;
+    uint64_t x23;
+    uint64_t x24;
+    uint64_t x25;
+    uint64_t x26;
+    uint64_t x27;
+    uint64_t x28;
+    uint64_t x29;
+    uint64_t x30;
+
+    // TODO: why them
+    uint64_t elr_el1;   // When taking an exception to EL1, holds the address to return to.
+    uint64_t spsr_el1;  // Holds the saved process state when an exception is taken to EL1
+    uint64_t sp_el0;    // Holds the stack pointer associated with EL0
+} trap_frame_t;
+
 typedef struct task_struct {
     // thread_info should be the first element
     thread_info_t info;

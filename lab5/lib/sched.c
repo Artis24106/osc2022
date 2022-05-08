@@ -20,6 +20,7 @@ void idle() {
 void kill_zombies() {
     disable_intr();
 
+    // free all tasks in the dead queue
     task_struct_t *curr, *temp;
     list_for_each_entry_safe(curr, temp, &dq, node) {  // `safe` is needed when deleting nodes
         list_del(&curr->node);

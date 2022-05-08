@@ -29,16 +29,6 @@ void invalid_handler(uint32_t x0) {
         ;
 }
 
-void sync_handler() {  // handle svc0
-    printf("sync_handler()" ENDL);
-    uint64_t spsr_el1, elr_el1, esr_el1;
-    get_reg(spsr_el1, spsr_el1);
-    get_reg(elr_el1, elr_el1);
-    get_reg(esr_el1, esr_el1);
-
-    printf("0x%lX, 0x%lX, 0x%lX\r\n", spsr_el1, elr_el1, esr_el1);
-}
-
 void enable_intr() {
     asm volatile("msr DAIFClr, 0xf");
 }

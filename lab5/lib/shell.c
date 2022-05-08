@@ -46,6 +46,8 @@ void read_cmd() {
 void exec_cmd() {
     parse_arg();
     if (!strlen(buf)) return;
+
+    // split the cmd part
     for (uint32_t i = 0; i < sizeof(func_list) / sizeof(struct func); i++) {
         if (!strncmp(buf, func_list[i].name, strlen(func_list[i].name) - 1)) {
             char* param = buf + strlen(func_list[i].name);
@@ -132,6 +134,9 @@ void shell() {
     cpio_init();
     enable_timer();
     welcome_msg();
+
+    cmd_exec("syscall.img");  // by now, execute the program directly
+
     do {
         read_cmd();
         exec_cmd();

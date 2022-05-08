@@ -55,7 +55,7 @@ el1_start:
 
 // save general registers to stack
 .macro save_all
-    sub     sp, sp, 32 * 8
+    sub     sp, sp, 16 * 17
     stp     x0, x1, [sp ,16 * 0]
     stp     x2, x3, [sp ,16 * 1]
     stp     x4, x5, [sp ,16 * 2]
@@ -71,11 +71,24 @@ el1_start:
     stp     x24, x25, [sp ,16 * 12]
     stp     x26, x27, [sp ,16 * 13]
     stp     x28, x29, [sp ,16 * 14]
-    str     x30, [sp, 16 * 15]
+
+    mrs     x0, elr_el1
+    mrs     x1, spsr_el1
+    mrs     x2, sp_el0
+
+    stp     x30, x0, [sp, 16 * 15]
+    stp     x1, x2, [sp, 16 * 16]
 .endm
 
 // load general registers from stack
 .macro load_all
+    ldp     x30, x0, [sp, 16 * 15]
+    ldp     x1, x2, [sp, 16 * 16]
+
+    msr     elr_el1, x0
+    msr     spsr_el1, x1
+    msr     sp_el0, x2
+
     ldp     x0, x1, [sp ,16 * 0]
     ldp     x2, x3, [sp ,16 * 1]
     ldp     x4, x5, [sp ,16 * 2]
@@ -91,111 +104,102 @@ el1_start:
     ldp     x24, x25, [sp ,16 * 12]
     ldp     x26, x27, [sp ,16 * 13]
     ldp     x28, x29, [sp ,16 * 14]
-    ldr     x30, [sp, 16 * 15]
-    add     sp, sp, 32 * 8
+
+    add     sp, sp, 16 * 17
 .endm
 
 
-// Typical exception vector table code.
+# ----- Exception vector table
 .balign 0x800
 Vector_table_el1:
-curr_el_sp0_sync:        // The exception handler for a synchronous 
-                         // exception from the current EL using SP0.
+
+# ----- Exception from the current EL when using SP_EL0.
+curr_el_sp0_sync:        // Synchronous
     mov     x0, #0
     b       _invalid_exception
 
 .balign 0x80
-curr_el_sp0_irq:         // The exception handler for an IRQ exception
-                         // from the current EL using SP0.
+curr_el_sp0_irq:         // IRQ
     mov     x0, #1
     b       _invalid_exception
 
 .balign 0x80
-curr_el_sp0_fiq:         // The exception handler for an FIQ exception
-                         // from the current EL using SP0.
+curr_el_sp0_fiq:         // FIQ
     mov     x0, #2
     b       _invalid_exception
 
 .balign 0x80
-curr_el_sp0_serror:      // The exception handler for a System Error 
-                         // exception from the current EL using SP0.
+curr_el_sp0_serror:      // System Error
     mov     x0, #3
     b       _invalid_exception
 
+# ----- Exception from the current EL when using SP_ELx.
 .balign 0x80
-curr_el_spx_sync:        // The exception handler for a synchrous 
-                         // exception from the current EL using the
-                         // current SP.
+curr_el_spx_sync:        // Synchrous
     mov     x0, #4
     b       _invalid_exception
 
 .balign 0x80
-curr_el_spx_irq:         // The exception handler for an IRQ exception from 
-                         // the current EL using the current SP.
+curr_el_spx_irq:         // IRQ
     b       _lower_el_aarch64_irq                     
 
 .balign 0x80
-curr_el_spx_fiq:         // The exception handler for an FIQ from 
-                         // the current EL using the current SP.
+curr_el_spx_fiq:         // FIQ
     mov     x0, #6
     b       _invalid_exception                     
 
 .balign 0x80
-curr_el_spx_serror:      // The exception handler for a System Error 
-                         // exception from the current EL using the
-                         // current SP.
+curr_el_spx_serror:      // System Error
     mov     x0, #7
     b       _invalid_exception                         
 
+# ----- Exception from a lower EL and at least one lower EL is AArch64.
 .balign 0x80
-lower_el_aarch64_sync:   // The exception handler for a synchronous 
-                         // exception from a lower EL (AArch64).
+lower_el_aarch64_sync:   // Synchronous
     b       _lower_el_aarch64_sync
 
 .balign 0x80
-lower_el_aarch64_irq:    // The exception handler for an IRQ from a lower EL
-                         // (AArch64).
+lower_el_aarch64_irq:    // IRQ
     b       _lower_el_aarch64_irq                         
 
 .balign 0x80
-lower_el_aarch64_fiq:    // The exception handler for an FIQ from a lower EL
-                         // (AArch64).
+lower_el_aarch64_fiq:    // FIQ
     mov     x0, #10
     b       _invalid_exception                         
 
 .balign 0x80
-lower_el_aarch64_serror: // The exception handler for a System Error 
-                         // exception from a lower EL(AArch64).
+lower_el_aarch64_serror: // System Error
     mov     x0, #11
     b       _invalid_exception                     
 
+# ----- Exception from a lower EL and all lower ELs are AArch32.
 .balign 0x80
-lower_el_aarch32_sync:   // The exception handler for a synchronous 
-                         // exception from a lower EL(AArch32).
+lower_el_aarch32_sync:   // Synchronous
     mov     x0, #12
     b       _invalid_exception
 
 .balign 0x80
-lower_el_aarch32_irq:    // The exception handler for an IRQ exception 
-                         // from a lower EL (AArch32).
+lower_el_aarch32_irq:    // IRQ
     mov     x0, #13
     b       _invalid_exception
 
 .balign 0x80
-lower_el_aarch32_fiq:    // The exception handler for an FIQ exception from 
-                         // a lower EL (AArch32).
+lower_el_aarch32_fiq:    // FIQ
     mov     x0, #14
     b       _invalid_exception                         
 
 .balign 0x80
-lower_el_aarch32_serror: // The exception handler for a System Error
-                         // exception from a lower EL(AArch32).
+lower_el_aarch32_serror: // System Error
     mov     x0, #15
     b       _invalid_exception                         
 
-_lower_el_aarch64_sync:
+# ----- End of vector table
+
+# exception handler
+_lower_el_aarch64_sync: // svc handler
     save_all
-    bl      sync_handler
+    mov     x0, sp
+    bl      svc_handler
     load_all
     eret 
 

@@ -90,6 +90,12 @@ void async_uart_write(char c) {
     uart_enable_int(TX);
 }
 
+void async_uart_putc(char* buf, uint32_t size) {
+    for (uint32_t i = 0; i < size; i++) {
+        async_uart_write(buf[i]);
+    }
+}
+
 void uart_read(char* buf, uint32_t size) {
     for (uint32_t i = 0; i < size; i++) {
         while (!(mmio_read(AUX_MU_LSR_REG) & 1)) delay(1);

@@ -45,7 +45,7 @@ void timer_callback() {
         set_timeout_abs(target->tval);
     }
 
-    // show_timer_list();
+    show_timer_list();
     // [ Lab3 - AD2 ] 5. unmasks the interrupt line to get the next interrupt at the end of the task.
     enable_timer();
 }
@@ -85,6 +85,7 @@ void add_timer(void* callback, char* args, uint64_t timeout) {
         is_first_node = false;
     }
     if (!inserted) list_add_tail(&t_event->node, timer_event_list);
+    show_timer_list();
     // if the first element is updated, should renew the timeout
     if (is_first_node) set_timeout_abs(t_event->tval);
 }

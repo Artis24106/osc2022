@@ -14,6 +14,7 @@
 void uart_init();
 void uart_write(char c);
 void async_uart_write(char c);
+void async_uart_putc(char* buf, uint32_t size);
 void uart_read(char* buf, uint32_t size);
 void async_uart_read(char* buf, uint32_t size);
 void uart_flush();
