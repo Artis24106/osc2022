@@ -14,12 +14,12 @@ void (*sys_tbl[SYS_NUM])(void*) = {
 };
 
 int32_t sys_getpid() {
-    printf("[DEBUG] sys_getpid()" ENDL);
+    // printf("[DEBUG] sys_getpid()" ENDL);
     return current->pid;
 }
 
 int64_t sys_uartread(char buf[], int64_t size) {
-    printf("[DEBUG] sys_uartread()" ENDL);
+    // printf("[DEBUG] sys_uartread()" ENDL);
     if (size == 0) return -1;
 
     async_uart_read(buf, size);
@@ -80,6 +80,7 @@ void svc_handler(trap_frame_t* tf) {  // handle svc0
         invalid_handler(8);
     }
 
+    enable_intr();
     switch (sys_num) {
         case 0:
             sys_getpid();
@@ -108,6 +109,7 @@ void svc_handler(trap_frame_t* tf) {  // handle svc0
         default:
             break;
     }
+    disable_intr();
     // sys_tbl[sys_num](tf->x0);  // syscall
     // printf("\n");
 }

@@ -82,14 +82,16 @@ el1_start:
 
 // load general registers from stack
 .macro load_all
-    ldp     x30, x0, [sp, 16 * 15]
-    ldp     x1, x2, [sp, 16 * 16]
+    ldp     x30, x1, [sp, 16 * 15]
+    ldp     x2, x3, [sp, 16 * 16]
 
-    msr     elr_el1, x0
-    msr     spsr_el1, x1
-    msr     sp_el0, x2
+    msr     elr_el1, x1
+    msr     spsr_el1, x2
+    msr     sp_el0, x3
 
-    ldp     x0, x1, [sp ,16 * 0]
+    # x0 -> ret value
+    # ldp     x0, x1, [sp ,16 * 0]
+    ldr     x1, [sp, 16 * 0 + 8]
     ldp     x2, x3, [sp ,16 * 1]
     ldp     x4, x5, [sp ,16 * 2]
     ldp     x6, x7, [sp ,16 * 3]
