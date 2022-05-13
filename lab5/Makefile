@@ -3,7 +3,7 @@
 all: 
 	make -C lib
 	make -C kernel
-	make -C bootloader
+	# make -C bootloader
 
 run:
 	qemu-system-aarch64 -M raspi3b -kernel kernel/kernel.img -display none -serial null -serial stdio -initrd initramfs.cpio -dtb bcm2710-rpi-3-b-plus.dtb
@@ -19,7 +19,7 @@ debug_bootloader:
 
 docker_cp:
 	docker cp kernel/kernel.elf my_kali:/
-	docker cp bootloader/bootloader.elf my_kali:/
+	# docker cp bootloader/bootloader.elf my_kali:/
 	docker cp gdb_script my_kali:/
 
 cpio:

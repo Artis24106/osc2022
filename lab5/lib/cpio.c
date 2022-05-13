@@ -115,3 +115,13 @@ void cpio_exec_callback(char* param, cpio_newc_header* header, char* file_name, 
     if (strcmp(param, file_name)) return;
     exec(file_data, data_size);
 }
+
+void cpio_exec_sched_callback(char* param, cpio_newc_header* header, char* file_name, uint32_t name_size, char* file_data, uint32_t data_size) {
+    if (strcmp(param, file_name)) return;
+
+    data_size = 246920;  // TODO: temp size
+
+    char* file_ptr = frame_alloc(data_size / 0x1000);  // memcpy, so the address will align 0x1000
+    memcpy(file_ptr, file_data, data_size);
+    create_user_task(file_ptr, NULL);
+}

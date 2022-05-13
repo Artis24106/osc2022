@@ -115,7 +115,7 @@ void cmd_exec(char* param) {
 }
 
 void cmd_timer(char* param) {
-    add_timer(show_time_callback, param, 2);
+    add_timer(show_time_callback, param, 2, true);
 }
 
 void cmd_delay(char* param) {
@@ -123,7 +123,7 @@ void cmd_delay(char* param) {
     char *arg1 = param,
          *arg2 = strchr(param, ' ') + 1;
     *strchr(param, ' ') = '\0';
-    add_timer(show_msg_callback, arg1, atoi(arg2));
+    add_timer(show_msg_callback, arg1, atoi(arg2), true);
 }
 
 void cmd_unknown() {

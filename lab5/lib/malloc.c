@@ -12,7 +12,7 @@ uint32_t get_tcache_idx(uint64_t chunk_size) {
 }
 
 void renew_kheap_space(uint64_t size) {
-    printf("[+] renew_kheap_space(0x%X)" ENDL, size);
+    // printf("[+] renew_kheap_space(0x%X)" ENDL, size);
     kheap_space = align(size, 0x1000);  // renew kheap size
     size = kheap_space / 0x1000;        // this is page number
 
@@ -107,7 +107,7 @@ malloc_new_space:
 kmalloc_end:
     //printf("[+] kmalloc: ptr -> 0x%X, space -> 0x%X" ENDL, ptr, kheap_space);
     enable_intr();
-    //printf("[+] kmalloc(0x%X) @ 0x%X" ENDL, size, ret);
+    // printf("[+] kmalloc(0x%X) @ 0x%X" ENDL, size, ret);
     return (void*)ret + sizeof(malloc_chunk_t);  // return the data ptr
 }
 

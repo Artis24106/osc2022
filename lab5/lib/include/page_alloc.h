@@ -17,7 +17,7 @@
 
 //#define FRAME_VAL_X_MASK (1 << 8)  // The frame is allocated, if the bit is set
 
-#define DEBUG_PAGE_ALLOC
+// #define DEBUG_PAGE_ALLOC
 
 enum migratetype {  // TODO: what is this??
     MIGRATE_UNMOVABLE,

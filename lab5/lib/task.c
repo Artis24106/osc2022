@@ -15,7 +15,9 @@ void run_task() {
     }
 
     // trigger the first task
-    ((void (*)())((task_event_t*)task_event_list->next)->callback)();
+    task_event_t* t_event = container_of(task_event_list->next, task_event_t, node);
+    ((void (*)())t_event->callback)();
+    // ((void (*)())((task_event_t*)task_event_list->next)->callback)();
 
     // remove the first event
     disable_intr();  // critical section

@@ -3,6 +3,11 @@
 
 #include <stdint.h>
 
+#include "list.h"
+#include "printf.h"
+
+extern struct list_head rq;
+
 #define ENDL "\r\n"
 
 int strcmp(const char *a, const char *b);

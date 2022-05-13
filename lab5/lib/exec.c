@@ -7,18 +7,21 @@ void exec(char* file_data, uint32_t data_size) {
     char* file_ptr = frame_alloc(data_size / 0x1000);  // memcpy, so the address will align 0x1000
     memcpy(file_ptr, file_data, data_size);
 
-    // TODO: change to write_sysreg
-    // const uint64_t zero = 0;
-    // write_sysreg(spsr_el1, zero);                // M[4:0] = 0 -> User, 0 -> to enable interrupt in EL0
-    // write_sysreg(elr_el1, file_data);            // return to start of file
-    // write_sysreg(sp_el0, ustack + USTACK_SIZE);  // stack for EL0
+    el1_to_el0(file_ptr, ustack);
+
+    // kfree(ustack);
+}
+
+void _exec(char* file_data, uint32_t data_size) {
+}
+
+// this is for exec
+void el1_to_el0(char* file_ptr, char* stack_ptr) {
     asm volatile(
         "msr spsr_el1, %0\n\t"  // M[4:0] = 0 -> User, 0 -> to enable interrupt in EL0
         "msr elr_el1, %1\n\t"   // return to start of file
         "msr sp_el0, %2\n\t"    // stack for EL0
         "eret\n\t" ::"r"(0),
         "r"(file_ptr),
-        "r"(ustack + USTACK_SIZE));
-
-    kfree(ustack);
+        "r"(stack_ptr + USTACK_SIZE));
 }

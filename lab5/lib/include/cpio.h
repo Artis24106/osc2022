@@ -9,6 +9,7 @@ extern void* INITRD_ADDR;
 #include "exec.h"
 #include "malloc.h"
 #include "printf.h"
+#include "sched.h"
 #include "string.h"
 
 typedef struct cpio_newc_header {
@@ -39,5 +40,6 @@ void cpio_newc_parse_data(char** cpio_ptr, char** buf, uint32_t size, uint32_t o
 void cpio_ls_callback(char* param, cpio_newc_header* header, char* file_name, uint32_t name_size, char* file_data, uint32_t data_size);
 void cpio_cat_callback(char* param, cpio_newc_header* header, char* file_name, uint32_t name_size, char* file_data, uint32_t data_size);
 void cpio_exec_callback(char* param, cpio_newc_header* header, char* file_name, uint32_t name_size, char* file_data, uint32_t data_size);
+void cpio_exec_sched_callback(char* param, cpio_newc_header* header, char* file_name, uint32_t name_size, char* file_data, uint32_t data_size);
 
 #endif

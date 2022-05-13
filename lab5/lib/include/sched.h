@@ -1,6 +1,7 @@
 #ifndef __SCHED_H__
 #define __SCHED_H__
 
+#include "exec.h"
 #include "list.h"
 #include "malloc.h"
 #include "string.h"
@@ -93,22 +94,27 @@ typedef struct task_struct {
 // run queue, wait queue, dead queue
 extern struct list_head rq, wq, dq;
 
-extern void switch_to(void* prev, void* next);
+extern void switch_to(task_struct_t* prev, task_struct_t* next);
 extern task_struct_t* get_current();
 #define current get_current()
 
 void idle();
 void kill_zombies();
 void schedule();
+void call_schedule();
 void main_thread_init();
 void thread_create(void* start);
 void thread_release(task_struct_t* target, int16_t ec);
 task_struct_t* next_task(task_struct_t* curr);
 
 uint32_t create_kern_task(void (*func)(), void* arg);
+uint32_t create_user_task(void (*func)(), void* arg);
+uint32_t _fork(trap_frame_t* tf);
 task_struct_t* new_task();
 
-void _thread_trampoline();
+void _kern_thread_trampoline();
+void _user_thread_trampoline();
+void _fork_child_trampoline();
 void thread_trampoline(void (*func)(), void* argv);
 
 void show_q();

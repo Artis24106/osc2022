@@ -14,6 +14,7 @@ void (*sys_tbl[SYS_NUM])(void*) = {
 };
 
 int32_t sys_getpid() {
+    show_q();
     // printf("[DEBUG] sys_getpid()" ENDL);
     return current->pid;
 }
@@ -27,20 +28,21 @@ int64_t sys_uartread(char buf[], int64_t size) {
 }
 
 int64_t sys_uartwrite(const char buf[], int64_t size) {
-    // printf("[DEBUG] sys_uartwrite(\"");
-    // for (int64_t i = 0; i < size; i++) printf("%c", buf[i]);
-    // printf("\", %d)" ENDL, size);
     if (size == 0) return -1;
     async_uart_putc(buf, size);
     return size;
 }
 
 int32_t sys_exec(const char* name, char* const argv[]) {
-    printf("[DEBUG] sys_exec()" ENDL);
+    printf("[DEBUG] sys_exec(%s)" ENDL, name);
+    cpio_newc_parser(cpio_exec_callback, name);
 }
 
-int32_t sys_fork() {
+int32_t sys_fork(trap_frame_t* tf) {
     printf("[DEBUG] sys_fork()" ENDL);
+
+    // fork
+    return _fork(tf);
 }
 
 void sys_exit(int32_t status) {
@@ -50,6 +52,7 @@ void sys_exit(int32_t status) {
 
 int32_t sys_mbox_call(uint8_t ch, uint32_t* mbox) {
     printf("[DEBUG] sys_mbox_call()" ENDL);
+    return 0;
 }
 
 void sys_kill(int32_t pid) {
@@ -73,7 +76,7 @@ void svc_handler(trap_frame_t* tf) {  // handle svc0
         @ret: x0
         @sys_num: x8
     */
-    ddd();
+    // ddd();
     uint64_t sys_num = tf->x8;
     // printf("sys_num = %d" ENDL, sys_num);
     if (sys_num >= SYS_NUM) {
@@ -95,7 +98,7 @@ void svc_handler(trap_frame_t* tf) {  // handle svc0
             sys_exec(tf->x0, tf->x1);
             break;
         case 4:
-            sys_fork();
+            sys_fork(tf);
             break;
         case 5:
             sys_exit(tf->x0);

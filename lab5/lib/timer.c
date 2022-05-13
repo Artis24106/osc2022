@@ -45,7 +45,7 @@ void timer_callback() {
         set_timeout_abs(target->tval);
     }
 
-    show_timer_list();
+    // show_timer_list();
     // [ Lab3 - AD2 ] 5. unmasks the interrupt line to get the next interrupt at the end of the task.
     enable_timer();
 }
@@ -62,31 +62,36 @@ uint64_t get_absolute_time(uint64_t offset) {
     return cntpct_el0 + cntfrq_el0 * offset;
 }
 
-void add_timer(void* callback, char* args, uint64_t timeout) {
+void add_timer(void* callback, char* args, uint64_t timeout, bool is_abs) {
     timer_event_t* t_event = kmalloc(sizeof(timer_event_t));
     INIT_LIST_HEAD(&t_event->node);
     t_event->args = kmalloc(strlen(args) + 1);
     strcpy(t_event->args, args);
     t_event->callback = callback;
-    t_event->tval = get_absolute_time(timeout);
+    if (is_abs) {
+        t_event->tval = get_absolute_time(timeout);
+    } else {
+        t_event->tval = get_absolute_time(0) + timeout;
+    }
 
     // if the list is empty, set first event interrupt
     if (list_empty(timer_event_list)) set_timeout_abs(t_event->tval);
 
     // insert node
-    struct list_head* curr;
+    timer_event_t* curr;
     bool inserted = false, is_first_node = true;
-    list_for_each(curr, timer_event_list) {
-        if (t_event->tval < ((timer_event_t*)curr)->tval) {
-            list_add(&t_event->node, curr->prev);
+    list_for_each_entry(curr, timer_event_list, node) {
+        if (t_event->tval < curr->tval) {
+            list_add(&t_event->node, curr->node.prev);
             inserted = true;
             break;
         }
         is_first_node = false;
     }
     if (!inserted) list_add_tail(&t_event->node, timer_event_list);
-    show_timer_list();
+    // show_timer_list();
     // if the first element is updated, should renew the timeout
+    // enable_timer();
     if (is_first_node) set_timeout_abs(t_event->tval);
 }
 
@@ -100,7 +105,7 @@ void show_timer_list() {
 }
 
 void sleep(uint64_t timeout) {
-    add_timer(NULL, NULL, 2);
+    add_timer(NULL, NULL, 2, true);
 }
 
 void show_msg_callback(char* args) {
@@ -113,12 +118,21 @@ void show_time_callback(char* args) {
     get_reg(cntfrq_el0, cntfrq_el0);
     printf("[+] show_time_callback() -> %02ds" ENDL, cntpct_el0 / cntfrq_el0);
 
-    add_timer(show_time_callback, args, 2);
+    add_timer(show_time_callback, args, 2, true);
+}
+
+void sched_callback() {
+    // printf("sched_callback()" ENDL);
+    call_schedule();
+    // add_timer(sched_callback, NULL, 0x10000, false);
+    uint64_t x0 = read_sysreg(cntfrq_el0);
+    // add_timer(sched_callback, NULL, x0 >> 8, false);
+    add_timer(sched_callback, NULL, x0 >> 5, false);
 }
 
 void set_timeout_rel(uint64_t timeout) {  // relative -> cntp_tval_el0
     uint64_t x0 = read_sysreg(cntfrq_el0);
-    write_sysreg(cntp_tval_el0, x0 * timeout);
+    write_sysreg(cntp_tval_el0, x0);
 }
 
 void set_timeout_abs(uint64_t timeout) {  // absoulute -> cntp_cval_el0

@@ -1,5 +1,6 @@
 #include <stdint.h>
 
+#include "cpio.h"
 #include "dtb.h"
 #include "page_alloc.h"
 #include "printf.h"
@@ -46,16 +47,26 @@ void kernel_main(char* x0) {
     dtb_init(x0);
 
     enable_intr();
+    enable_timer();
+    // TODO: what's that??
+    uint64_t tmp;
+    asm volatile("mrs %0, cntkctl_el1"
+                 : "=r"(tmp));
+    tmp |= 1;
+    asm volatile("msr cntkctl_el1, %0"
+                 :
+                 : "r"(tmp));
 
-    // main_thread_init();
+    main_thread_init();
 
     // for (int i = 0; i < 3; i++) {
     //     create_kern_task(foo, NULL);
     // }
 
-    // idle();
+    cpio_newc_parser(cpio_exec_sched_callback, "syscall.img");
+    idle();
 
     // No shell anymore QQ
     // start the shell!!
-    shell();
+    // shell();
 }

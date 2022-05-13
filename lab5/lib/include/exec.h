@@ -11,5 +11,7 @@
 // TODO: 64KB pages for translation table???
 
 void exec(char* file_data, uint32_t data_size);
+void _exec(char* file_data, uint32_t data_size);
+void el1_to_el0(char* file_ptr, char* stack_ptr);
 
 #endif

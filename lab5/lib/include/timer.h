@@ -5,6 +5,7 @@
 #include "malloc.h"
 #include "printf.h"
 #include "regs.h"
+#include "sched.h"
 #include "string.h"
 
 #define CORE0_TIMER_IRQ_CTRL 0x40000040
@@ -24,14 +25,17 @@ void timer_callback();
 
 void timer_list_init();
 uint64_t get_absolute_time(uint64_t offset);
-void add_timer(void* callback, char* args, uint64_t timeout);
+void add_timer(void* callback, char* args, uint64_t timeout, bool is_abs);
 void show_timer_list();
 void sleep(uint64_t timeout);
 
 void show_msg_callback(char* args);
 void show_time_callback(char* args);
+void sched_callback();
 
 void set_timeout_rel(uint64_t timeout);  // relative -> cntp_tval_el0
 void set_timeout_abs(uint64_t timeout);  // absoulute -> cntp_cval_el0
+
+void update_timer();
 
 #endif
