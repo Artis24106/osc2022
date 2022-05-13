@@ -5,6 +5,7 @@
 #include "page_alloc.h"
 #include "printf.h"
 #include "sched.h"
+#include "svc.h"
 #include "uart.h"
 
 void foo() {
@@ -29,6 +30,9 @@ void test() {
 }
 
 void kernel_main(char* x0) {
+    // initialize dtb
+    dtb_init(x0);
+
     // initialize the page frame allocator
     frame_init();
 
@@ -43,8 +47,9 @@ void kernel_main(char* x0) {
     uart_enable_int(RX | TX);
     uart_enable_aux_int();
 
-    // initialize dtb
-    dtb_init(x0);
+    // page_init();
+    // buddy_init();
+    // slab_init();
 
     enable_intr();
     enable_timer();

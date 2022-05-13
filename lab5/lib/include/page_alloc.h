@@ -1,12 +1,17 @@
 #ifndef __PAGE_ALLOC_H__
 #define __PAGE_ALLOC_H__
 
+#include "cpio.h"
+#include "dtb.h"
 #include "list.h"
 #include "printf.h"
 
 #define MEM_REGION_START 0x10000000
 #define MEM_REGION_END 0x20000000
 #define PAGE_SIZE 0x1000
+
+extern void *DTB_START, *DTB_END;
+extern void *INITRD_START, *INITRD_END;
 
 // TODO: better define
 #define FRAME_SIZE ((MEM_REGION_END - MEM_REGION_START) / PAGE_SIZE)  // 0x10000 -> 65536

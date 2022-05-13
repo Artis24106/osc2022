@@ -56,7 +56,7 @@ tcache_handling:
     // TODO: try getting space from tcache
     uint32_t idx = get_tcache_idx(size);
     if (tcache.counts[idx]) {
-        //printf("[++++++++++++] FOUND in tcache!!!" ENDL);
+        // printf("[++++++++++++] FOUND in tcache!!!" ENDL);
 
         ret = tcache.entries[idx];
 
@@ -105,16 +105,17 @@ malloc_new_space:
     kheap_space -= size;
 
 kmalloc_end:
-    //printf("[+] kmalloc: ptr -> 0x%X, space -> 0x%X" ENDL, ptr, kheap_space);
+    // printf("[+] kmalloc: ptr -> 0x%X, space -> 0x%X" ENDL, ptr, kheap_space);
     enable_intr();
     // printf("[+] kmalloc(0x%X) @ 0x%X" ENDL, size, ret);
     return (void*)ret + sizeof(malloc_chunk_t);  // return the data ptr
 }
 
 void kfree(void* ptr) {
+    return;
     disable_intr();
     malloc_chunk_t* chunk = ptr - sizeof(malloc_chunk_t);
-    //printf("[+] chunk size to free -> 0x%X" ENDL, chunk->chunk_size);
+    printf("[+] chunk size to free -> 0x%X @ (0x%X)" ENDL, chunk->chunk_size, ptr);
 
     if (chunk->chunk_size > 0x410) {
         goto free_large_chunk;

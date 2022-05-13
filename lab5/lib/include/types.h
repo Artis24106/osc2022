@@ -82,4 +82,6 @@ struct hlist_node {
     struct hlist_node *next, **pprev;
 };
 
+typedef uint64_t addr_t;
+
 #endif /* _TOOLS_LINUX_TYPES_H_ */

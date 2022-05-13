@@ -7,7 +7,7 @@ void cpio_init() {
 }
 
 void cpio_newc_parser(void* callback, char* param) {
-    char *cpio_ptr = INITRD_ADDR,
+    char *cpio_ptr = INITRD_START,
          *file_name, *file_data;
     uint32_t name_size, data_size;
     cpio_newc_header* header = kmalloc(CPIO_NEWC_HEADER_SIZE);
@@ -30,6 +30,30 @@ void cpio_newc_parser(void* callback, char* param) {
             param, header, file_name, name_size, file_data, data_size);
     }
 }
+
+// void cpio_newc_parser_tf(void* callback, char* param, trap_frame_t* tf) {
+//     char *cpio_ptr = INITRD_START,
+//          *file_name, *file_data;
+//     uint32_t name_size, data_size;
+//     cpio_newc_header* header = kmalloc(CPIO_NEWC_HEADER_SIZE);
+
+//     while (1) {
+//         cpio_newc_parse_header(&cpio_ptr, &header);
+//         // cpio_newc_show_header(header);
+
+//         name_size = hex_ascii_to_uint32(header->c_namesize, sizeof(header->c_namesize) / sizeof(char));
+//         data_size = hex_ascii_to_uint32(header->c_filesize, sizeof(header->c_filesize) / sizeof(char));
+
+//         cpio_newc_parse_data(&cpio_ptr, &file_name, name_size, CPIO_NEWC_HEADER_SIZE);
+
+//         cpio_newc_parse_data(&cpio_ptr, &file_data, data_size, 0);
+
+//         if (strcmp(file_name, "TRAILER!!!") == 0) {
+//             break;
+//         }
+//         cpio_exec_callback_tf(param, header, file_name, file_data, data_size, tf);
+//     }
+// }
 
 void cpio_newc_parse_header(char** cpio_ptr, cpio_newc_header** header) {
     *header = *cpio_ptr;
@@ -116,6 +140,12 @@ void cpio_exec_callback(char* param, cpio_newc_header* header, char* file_name, 
     exec(file_data, data_size);
 }
 
+// void cpio_exec_callback_tf(char* param, cpio_newc_header* header, char* file_name, char* file_data, uint32_t data_size, trap_frame_t* tf) {
+//     // TODO: implement multi-parameter
+//     if (strcmp(param, file_name)) return;
+//     _exec(file_data, data_size, tf);
+// }
+
 void cpio_exec_sched_callback(char* param, cpio_newc_header* header, char* file_name, uint32_t name_size, char* file_data, uint32_t data_size) {
     if (strcmp(param, file_name)) return;
 
@@ -123,5 +153,6 @@ void cpio_exec_sched_callback(char* param, cpio_newc_header* header, char* file_
 
     char* file_ptr = frame_alloc(data_size / 0x1000);  // memcpy, so the address will align 0x1000
     memcpy(file_ptr, file_data, data_size);
-    create_user_task(file_ptr, NULL);
+    // create_user_task(file_ptr, NULL);
+    create_user_task(file_ptr, 0);
 }

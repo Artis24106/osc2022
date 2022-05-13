@@ -14,7 +14,7 @@ void (*sys_tbl[SYS_NUM])(void*) = {
 };
 
 int32_t sys_getpid() {
-    show_q();
+    // show_q();
     // printf("[DEBUG] sys_getpid()" ENDL);
     return current->pid;
 }
@@ -33,8 +33,9 @@ int64_t sys_uartwrite(const char buf[], int64_t size) {
     return size;
 }
 
-int32_t sys_exec(const char* name, char* const argv[]) {
+int32_t sys_exec(trap_frame_t* tf, const char* name, char* const argv[]) {
     printf("[DEBUG] sys_exec(%s)" ENDL, name);
+    // cpio_newc_parser_tf(cpio_exec_callback_tf, name, tf);
     cpio_newc_parser(cpio_exec_callback, name);
 }
 
@@ -51,7 +52,9 @@ void sys_exit(int32_t status) {
 }
 
 int32_t sys_mbox_call(uint8_t ch, uint32_t* mbox) {
-    printf("[DEBUG] sys_mbox_call()" ENDL);
+    printf("[DEBUG] sys_mbox_call(%d, 0x%X)" ENDL, ch, *mbox);
+    ddd();
+    mbox_call(mbox, ch);
     return 0;
 }
 
@@ -67,9 +70,9 @@ void svc_handler(trap_frame_t* tf) {  // handle svc0
     // printf("esr_el1 = 0x%X\n", esr_el1);
 
     // EC (Exception Class) should be SVC instruction
-    if ((esr_el1 >> 26) != 0b010101) {
-        invalid_handler(8);
-    }
+    // if ((esr_el1 >> 26) != 0b010101) {
+    //     invalid_handler(8);
+    // }
 
     /*  lab5 svc calling convention
         @args: x0, x1, ...
@@ -95,7 +98,7 @@ void svc_handler(trap_frame_t* tf) {  // handle svc0
             sys_uartwrite(tf->x0, tf->x1);
             break;
         case 3:
-            sys_exec(tf->x0, tf->x1);
+            sys_exec(tf, tf->x0, tf->x1);
             break;
         case 4:
             sys_fork(tf);

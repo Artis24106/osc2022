@@ -38,9 +38,10 @@ void kill_zombies() {
 
 void schedule() {
     if (rq_len <= 1) return;  // scheduling is not necessary
-    // show_q();
+    show_q();
     // get next task
     task_struct_t* next = next_task(current);
+    // printf("sch switch_to()" ENDL);
     switch_to(current, &next->info);
 }
 

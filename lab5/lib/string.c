@@ -43,8 +43,8 @@ char *memcpy(void *dest, const void *src, uint64_t len) {
     if (&rq != NULL) {
         // printf("rq_ptr = 0x%X" ENDL, &rq);
         if ((char *)dest - (char *)&rq < 0x10000) {
-            printf("QQQQQ" ENDL);
             ddd();
+            printf("QQQQQ" ENDL);
         }
     }
     while (len--) *d++ = *(char *)src++;

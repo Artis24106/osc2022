@@ -740,4 +740,9 @@ static inline void list_del_range(struct list_head *begin,
 #define list_for_each_from(pos, head) \
     for (; pos != (head); pos = pos->next)
 
+#define LIST_INIT(name)                              \
+    do {                                             \
+        name = (struct list_head){&(name), &(name)}; \
+    } while (0)
+
 #endif /* __TOOLS_LINUX_LIST_H */

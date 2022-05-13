@@ -1,18 +1,18 @@
 #include "dtb.h"
 
 // #include "uart.h"
-char* DTB_ADDRESS;
-void* INITRD_ADDR;
+void *DTB_START, *DTB_END;
+void *INITRD_START, *INITRD_END;
 
 void dtb_init(uint64_t x0) {
-    DTB_ADDRESS = (char*)x0;
-    // uart_putc(*DTB_ADDRESS + 0x60, 160);
+    DTB_START = (void*)x0;
+    fdt_header_t* header = (fdt_header_t*)DTB_START;
+    DTB_END = DTB_START + header->totalsize;
     dtb_parser(dtb_get_initrd_callback);
 }
 
 void dtb_parser(dtb_callback_t callback) {
-    fdt_header* header = (fdt_header*)DTB_ADDRESS;
-    uart_puth(header);
+    fdt_header_t* header = (fdt_header_t*)DTB_START;
     // Check magic
     if (get_be_uint32(&header->magic) != 0xd00dfeed) {
         printf("[+] BAD" ENDL);
@@ -63,9 +63,11 @@ void dtb_parser(dtb_callback_t callback) {
 
 void dtb_get_initrd_callback(uint32_t token_type, char* name, char* data) {
     if (token_type == FDT_PROP && !strcmp(name, "linux,initrd-start")) {
-        INITRD_ADDR = get_be_uint32(data);
-
-        printf("[+] Initrd address: 0x%08lX" ENDL, data);
+        INITRD_START = get_be_uint32(data);
+        printf("[+] Initrd start address: 0x%08lX" ENDL, INITRD_START);
+    } else if (token_type == FDT_PROP && !strcmp(name, "linux,initrd-end")) {
+        INITRD_END = get_be_uint32(data);
+        printf("[+] Initrd end address: 0x%08lX" ENDL, INITRD_END);
     }
 }
 

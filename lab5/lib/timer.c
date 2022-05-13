@@ -65,7 +65,7 @@ uint64_t get_absolute_time(uint64_t offset) {
 void add_timer(void* callback, char* args, uint64_t timeout, bool is_abs) {
     timer_event_t* t_event = kmalloc(sizeof(timer_event_t));
     INIT_LIST_HEAD(&t_event->node);
-    t_event->args = kmalloc(strlen(args) + 1);
+    t_event->args = kmalloc(strlen(args) + 1);  // TODO: malloc bug here QQ, may write the run queue
     strcpy(t_event->args, args);
     t_event->callback = callback;
     if (is_abs) {

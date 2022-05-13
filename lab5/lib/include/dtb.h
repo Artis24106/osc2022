@@ -24,7 +24,7 @@ typedef struct fdt_header {
     uint32_t boot_cpuid_phys;
     uint32_t size_dt_strings;
     uint32_t size_dt_struct;
-} fdt_header;
+} fdt_header_t;
 typedef void (*dtb_callback_t)(uint32_t token_type, char *name, char *data);
 
 void dtb_init();

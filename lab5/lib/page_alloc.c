@@ -61,7 +61,8 @@ void frame_init() {
 
     // handle reserved memory
     // 1. find all reserved frames
-    memory_reserve(0x10001000, 0x10002001);  // use fpn 1, 2
+    memory_reserve(INITRD_START, INITRD_END);  // reserve for initrd
+    memory_reserve(DTB_START, DTB_END);        // reserve for dtb
 
     // 2. merge the unused frames
     bool modified = false;
@@ -224,7 +225,7 @@ void memory_reserve(void* start, void* end) {
     uint32_t start_fpn = addr2fpn(start),
              end_fpn = addr2fpn(end - 1);
 
-    printf("[+] %d ~ %d" ENDL, start_fpn, end_fpn);
+    // printf("[+] %d ~ %d" ENDL, start_fpn, end_fpn);
     for (uint32_t fpn = start_fpn; fpn <= end_fpn; fpn++) {
         if (frame_list[fpn].is_used) {  // TODO: simple check
             printf("[+] The reserved memory is used (0x%X ~ 0x%X)" ENDL, start, end);
