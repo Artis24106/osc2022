@@ -13,7 +13,7 @@ int64_t sys_uartwrite(const char buf[], int64_t size);
 int32_t sys_exec(trap_frame_t* tf, const char* name, char* const argv[]);
 int32_t sys_fork(trap_frame_t* tf);
 void sys_exit(int32_t status);
-int32_t sys_mbox_call(uint8_t ch, uint32_t* mbox);
+int32_t sys_mbox_call(uint8_t ch, mail_t* mbox);
 void sys_kill(int32_t pid);
 
 #define SYS_NUM 8

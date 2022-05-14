@@ -1,23 +1,44 @@
 #include "mbox.h"
 
+// int mbox_call(mail_t* mbox, uint8_t ch) {
+//     uint32_t addr_channel;
+
+//     // 1. Read the status register until the empty flag is not set
+//     while (mmio_read(MBOX_STATUS) & MBOX_FULL) asm volatile("nop");
+
+//     // 2. Write the data (shifted into the uppper 28 bits) combined with
+//     //    the channel (in the lower four bits) to the write register
+//     addr_channel = (((uint32_t)(uint64_t)mbox) & 0xFFFFFFF0) | (ch & 0xF);
+//     mmio_write(MBOX_WRITE, addr_channel);
+
+//     // Wait for mbox response
+//     do {
+//         while (mmio_read(MBOX_STATUS) & MBOX_EMPTY) asm volatile("nop");
+//     } while (mmio_read(MBOX_READ) != addr_channel);
+
+//     /* check response vaild */
+//     return mbox->header.code == MBOX_RESPONSE;
+// }
+
 int mbox_call(mail_t* mbox, uint8_t ch) {
-    uint32_t addr_channel;
-
-    // 1. Read the status register until the empty flag is not set
-    while (mmio_read(MBOX_STATUS) & MBOX_FULL) asm volatile("nop");
-
-    // 2. Write the data (shifted into the uppper 28 bits) combined with
-    //    the channel (in the lower four bits) to the write register
-    addr_channel = (((uint32_t)(uint64_t)mbox) & 0xFFFFFFF0) | (ch & 0xF);
-    mmio_write(MBOX_WRITE, addr_channel);
-
-    // Wait for mbox response
+    unsigned long magic = (((unsigned long)((unsigned long)mbox) & ~0xF) | (ch & 0xF));
+    printf("0x%X, 0x%X" ENDL, ch, (unsigned long)mbox);
+    printf("0x%X, 0x%X" ENDL, (ch & 0xF), ((unsigned long)((unsigned long)mbox) & ~0xF));
+    printf("magic: 0x%X" ENDL, magic);
+    // r = 0x3B220E08;
+    ddd();
+    /* wait until we can write to the mailbox */
     do {
-        while (mmio_read(MBOX_STATUS) & MBOX_EMPTY) asm volatile("nop");
-    } while (mmio_read(MBOX_READ) != addr_channel);
+        asm volatile("nop");
+    } while (mmio_read(MBOX_STATUS) & MBOX_FULL);
+    /* write the address of our message to the mailbox with channel identifier */
+    mmio_write(MBOX_WRITE, magic);
 
-    /* check response vaild */
-    return mbox->header.code == MBOX_RESPONSE;
+    /* now wait for the response */
+    while (mmio_read(MBOX_STATUS) & MBOX_EMPTY)
+        ;
+    /* is it a response to our message? */
+    return mmio_read(MBOX_READ) == magic;
 }
 
 void get_board_revision(uint32_t* board_revision) {

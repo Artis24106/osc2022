@@ -60,9 +60,12 @@ void frame_init() {
     // frame_list[0].val = MAX_ORDER;
 
     // handle reserved memory
-    // 1. find all reserved frames
-    memory_reserve(INITRD_START, INITRD_END);  // reserve for initrd
-    memory_reserve(DTB_START, DTB_END);        // reserve for dtb
+    // 1. reserve frames
+    memory_reserve(INITRD_START, INITRD_END);  // initrd
+    memory_reserve(DTB_START, DTB_END);        // dtb
+
+    memory_reserve(0x80000, 0x100000);  // kernel
+    memory_reserve(0x0, 0x1000);        // TODO: spin table
 
     // 2. merge the unused frames
     bool modified = false;

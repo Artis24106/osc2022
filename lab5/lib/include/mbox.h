@@ -1,6 +1,7 @@
 #ifndef __MBOX_H__
 #define __MBOX_H__
 
+#include "exception.h"
 #include "mmio.h"
 
 #define VIDEOCORE_MBOX_BASE (MMIO_BASE + 0x0000B880)

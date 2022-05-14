@@ -41,7 +41,7 @@ void schedule() {
     show_q();
     // get next task
     task_struct_t* next = next_task(current);
-    // printf("sch switch_to()" ENDL);
+    printf("sch switch_to()" ENDL);
     switch_to(current, &next->info);
 }
 
@@ -95,6 +95,7 @@ void thread_release(task_struct_t* target, int16_t ec) {
     // if the current task is dead, switch to the next task
     if (target == current) {
         enable_intr();
+        printf("dis switch_to" ENDL);
         switch_to(target, next);
     } else {
         enable_intr();
@@ -156,12 +157,14 @@ uint32_t create_user_task(void (*func)(), void* arg) {
 
     // malloc kernel stack
     info->sp = kmalloc(THREAD_STACK_SIZE);
+    printf("stack: 0x%X" ENDL, info->sp);
     task->kernel_stack = info->sp;
     info->sp += THREAD_STACK_SIZE - 8;  // TODO: not sure about the `-8` part
     info->fp = info->sp;
 
     // malloc user stack
     info->x20 = kmalloc(THREAD_STACK_SIZE);
+    printf("user stack: 0x%X" ENDL, info->x20);
     task->user_stack = info->x20;
     info->x20 += THREAD_STACK_SIZE - 8;
 
@@ -183,8 +186,8 @@ uint32_t _fork(trap_frame_t* tf) {
     task->status = RUNNING;
 
     // copy user, kernel stack
-    task->user_stack = kmalloc(THREAD_STACK_SIZE);
-    task->kernel_stack = kmalloc(THREAD_STACK_SIZE);
+    task->user_stack = kmalloc(THREAD_STACK_SIZE + 8) + 8;
+    task->kernel_stack = kmalloc(THREAD_STACK_SIZE + 8) + 8;
     memcpy(task->user_stack, current->user_stack, THREAD_STACK_SIZE);
     memcpy(task->kernel_stack, current->kernel_stack, THREAD_STACK_SIZE);
 

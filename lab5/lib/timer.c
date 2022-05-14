@@ -124,7 +124,6 @@ void show_time_callback(char* args) {
 void sched_callback() {
     // printf("sched_callback()" ENDL);
     call_schedule();
-    // add_timer(sched_callback, NULL, 0x10000, false);
     uint64_t x0 = read_sysreg(cntfrq_el0);
     // add_timer(sched_callback, NULL, x0 >> 8, false);
     add_timer(sched_callback, NULL, x0 >> 5, false);

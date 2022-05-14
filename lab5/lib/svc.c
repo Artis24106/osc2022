@@ -14,7 +14,7 @@ void (*sys_tbl[SYS_NUM])(void*) = {
 };
 
 int32_t sys_getpid() {
-    // show_q();
+    show_q();
     // printf("[DEBUG] sys_getpid()" ENDL);
     return current->pid;
 }
@@ -35,6 +35,7 @@ int64_t sys_uartwrite(const char buf[], int64_t size) {
 
 int32_t sys_exec(trap_frame_t* tf, const char* name, char* const argv[]) {
     printf("[DEBUG] sys_exec(%s)" ENDL, name);
+    show_q();
     // cpio_newc_parser_tf(cpio_exec_callback_tf, name, tf);
     cpio_newc_parser(cpio_exec_callback, name);
 }
@@ -51,11 +52,9 @@ void sys_exit(int32_t status) {
     thread_release(current, status);
 }
 
-int32_t sys_mbox_call(uint8_t ch, uint32_t* mbox) {
+int32_t sys_mbox_call(uint8_t ch, mail_t* mbox) {
     printf("[DEBUG] sys_mbox_call(%d, 0x%X)" ENDL, ch, *mbox);
-    ddd();
-    mbox_call(mbox, ch);
-    return 0;
+    return mbox_call(mbox, ch);
 }
 
 void sys_kill(int32_t pid) {
@@ -107,6 +106,7 @@ void svc_handler(trap_frame_t* tf) {  // handle svc0
             sys_exit(tf->x0);
             break;
         case 6:
+            // ddd();
             sys_mbox_call(tf->x0, tf->x1);
             break;
         case 7:

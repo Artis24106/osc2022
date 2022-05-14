@@ -5,6 +5,7 @@ void exec(char* file_data, uint32_t data_size) {
     char* ustack = frame_alloc(USTACK_SIZE / 0x1000);
 
     char* file_ptr = frame_alloc(data_size / 0x1000);  // memcpy, so the address will align 0x1000
+    printf("file_ptr: 0x%X" ENDL, file_ptr);
     memcpy(file_ptr, file_data, data_size);
 
     el1_to_el0(file_ptr, ustack);

@@ -69,6 +69,7 @@ void kernel_main(char* x0) {
     // }
 
     cpio_newc_parser(cpio_exec_sched_callback, "syscall.img");
+    // cpio_newc_parser(cpio_exec_callback, "syscall.img");
     idle();
 
     // No shell anymore QQ

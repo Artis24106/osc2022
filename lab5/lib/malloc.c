@@ -112,10 +112,10 @@ kmalloc_end:
 }
 
 void kfree(void* ptr) {
-    return;
+    // return;
     disable_intr();
     malloc_chunk_t* chunk = ptr - sizeof(malloc_chunk_t);
-    printf("[+] chunk size to free -> 0x%X @ (0x%X)" ENDL, chunk->chunk_size, ptr);
+    // printf("[+] chunk size to free -> 0x%X @ (0x%X)" ENDL, chunk->chunk_size, ptr);
 
     if (chunk->chunk_size > 0x410) {
         goto free_large_chunk;
