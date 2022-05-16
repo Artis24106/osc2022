@@ -56,7 +56,8 @@ void kernel_main(char* x0) {
     // slab_init();
 
     enable_intr();
-    enable_timer();
+    // enable_timer();
+    update_timer();
     // TODO: what's that??
     uint64_t tmp;
     asm volatile("mrs %0, cntkctl_el1"

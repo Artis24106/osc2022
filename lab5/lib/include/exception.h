@@ -1,6 +1,7 @@
 #ifndef __EXCEPTIONS_H__
 #define __EXCEPTIONS_H__
 
+#include "aux.h"
 #include "mmio.h"
 #include "printf.h"
 #include "task.h"

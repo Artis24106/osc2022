@@ -10,7 +10,7 @@ void task_list_init() {
 void run_task() {
     // TODO: if there is no task, maybe do something?
     if (list_empty(task_event_list)) {
-        printf("[+] task_event_list is empty" ENDL);
+        // printf("[+] task_event_list is empty" ENDL);
         return;
     }
 

@@ -1,4 +1,5 @@
 gef-remote host.docker.internal:1234
-b ddd
-b slab_alloc
+b sys_fork
+c
+b disable_timer
 c

@@ -38,10 +38,12 @@ void kill_zombies() {
 
 void schedule() {
     if (rq_len <= 1) return;  // scheduling is not necessary
-    show_q();
+    // show_q();
     // get next task
     task_struct_t* next = next_task(current);
-    printf("sch switch_to()" ENDL);
+    // printf("sch switch_to()" ENDL);
+    // enable_timer();
+    update_timer();
     switch_to(current, &next->info);
 }
 
@@ -186,10 +188,12 @@ uint32_t _fork(trap_frame_t* tf) {
     task->status = RUNNING;
 
     // copy user, kernel stack
+    // task->user_stack = kmalloc(THREAD_STACK_SIZE);
+    // task->kernel_stack = kmalloc(THREAD_STACK_SIZE);
     task->user_stack = kmalloc(THREAD_STACK_SIZE + 8) + 8;
     task->kernel_stack = kmalloc(THREAD_STACK_SIZE + 8) + 8;
-    memcpy(task->user_stack, current->user_stack, THREAD_STACK_SIZE);
-    memcpy(task->kernel_stack, current->kernel_stack, THREAD_STACK_SIZE);
+    memcpy(task->user_stack, curr_task->user_stack, THREAD_STACK_SIZE);
+    memcpy(task->kernel_stack, curr_task->kernel_stack, THREAD_STACK_SIZE);
 
     // calculate the stack offset
     int64_t usp_off = task->user_stack - curr_task->user_stack;  // offset to user stack
@@ -250,19 +254,22 @@ void show_q() {
     }
     printf("\n");
 
-    printf("wq: ");
-    list_for_each_entry(curr, &wq, node) {
-        printf("0x%X -> ", curr->pid);
-    }
-    printf("\n");
+    // printf("wq: ");
+    // list_for_each_entry(curr, &wq, node) {
+    //     printf("0x%X -> ", curr->pid);
+    // }
+    // printf("\n");
 
-    printf("dq: ");
-    list_for_each_entry(curr, &dq, node) {
-        printf("0x%X -> ", curr->pid);
-    }
-    printf("\n\n");
+    // printf("dq: ");
+    // list_for_each_entry(curr, &dq, node) {
+    //     printf("0x%X -> ", curr->pid);
+    // }
+    // printf("\n\n");
+    printf(ENDL);
 }
 
 void update_timer() {
-    set_timeout_rel(1);
+    uint64_t x0 = read_sysreg(cntfrq_el0);
+    write_sysreg(cntp_tval_el0, x0 >> 5);
+    enable_timer();
 }

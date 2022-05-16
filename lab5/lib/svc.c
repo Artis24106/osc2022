@@ -54,6 +54,10 @@ void sys_exit(int32_t status) {
 
 int32_t sys_mbox_call(uint8_t ch, mail_t* mbox) {
     printf("[DEBUG] sys_mbox_call(%d, 0x%X)" ENDL, ch, *mbox);
+    // while (1) {
+    // printf("mbox!!!" ENDL);
+    // }
+
     return mbox_call(mbox, ch);
 }
 
@@ -115,7 +119,7 @@ void svc_handler(trap_frame_t* tf) {  // handle svc0
         default:
             break;
     }
-    disable_intr();
+    // disable_intr();
     // sys_tbl[sys_num](tf->x0);  // syscall
     // printf("\n");
 }

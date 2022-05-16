@@ -3,6 +3,7 @@
 struct list_head* timer_event_list;
 
 void enable_timer() {
+    // printf("enable_timer()" ENDL);
     write_sysreg(cntp_ctl_el0, 1);
     *(uint32_t*)CORE0_TIMER_IRQ_CTRL = 2;  // enable rip3 timer interrupt
 
@@ -10,12 +11,14 @@ void enable_timer() {
 }
 
 void disable_timer() {
+    // printf("disable_timer()" ENDL);
     *(uint32_t*)CORE0_TIMER_IRQ_CTRL = 0;  // disable rip3 timer interrupt
 }
 
 void timer_handler() {
     disable_timer();  // [ Lab3 - AD2 ] 1. masks the device’s interrupt line,
-    add_task(timer_callback, PRIORITY_NORMAL);
+    // add_task(timer_callback, PRIORITY_NORMAL); // TODO: task or just call `call_schedule`?
+    call_schedule();
 }
 
 void timer_callback() {
@@ -23,18 +26,18 @@ void timer_callback() {
     if (list_empty(timer_event_list)) {
         // printf("[+] timer_event_list is empty" ENDL);
         set_timeout_rel(65535);
-        enable_timer();
-        return;
+        goto timer_callback_end;
     }
 
     // trigger the first callback
     timer_event_t* target = container_of(timer_event_list->next, timer_event_t, node);
     target->callback(target->args);
 
-    disable_timer();
+    // disable_timer();
     // remove the first event
     void* bk = timer_event_list->next;
-    list_del(timer_event_list->next);
+    // list_del(timer_event_list->next);
+    list_del(bk);
     kfree(bk);
 
     // if there is next event, set next timeout
@@ -45,7 +48,8 @@ void timer_callback() {
         set_timeout_abs(target->tval);
     }
 
-    // show_timer_list();
+timer_callback_end:
+    show_timer_list();
     // [ Lab3 - AD2 ] 5. unmasks the interrupt line to get the next interrupt at the end of the task.
     enable_timer();
 }
@@ -63,6 +67,8 @@ uint64_t get_absolute_time(uint64_t offset) {
 }
 
 void add_timer(void* callback, char* args, uint64_t timeout, bool is_abs) {
+    disable_intr();
+
     timer_event_t* t_event = kmalloc(sizeof(timer_event_t));
     INIT_LIST_HEAD(&t_event->node);
     t_event->args = kmalloc(strlen(args) + 1);  // TODO: malloc bug here QQ, may write the run queue
@@ -93,11 +99,14 @@ void add_timer(void* callback, char* args, uint64_t timeout, bool is_abs) {
     // if the first element is updated, should renew the timeout
     // enable_timer();
     if (is_first_node) set_timeout_abs(t_event->tval);
+
+    enable_intr();
 }
 
 void show_timer_list() {
     timer_event_t* curr;
     bool inserted = false;
+    printf("[DEBUG] show_timer_list()" ENDL);
     list_for_each_entry(curr, timer_event_list, node) {
         printf("0x%X -> ", curr->tval);
     }
