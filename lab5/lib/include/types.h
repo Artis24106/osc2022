@@ -70,9 +70,9 @@ typedef struct {
 #define __aligned_u64 uint64_t __attribute__((aligned(8)))
 #endif
 
-struct list_head {
+typedef struct list_head {
     struct list_head *next, *prev;
-};
+} list_head_t;
 
 struct hlist_head {
     struct hlist_node *first;

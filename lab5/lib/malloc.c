@@ -1,175 +1,138 @@
 #include "malloc.h"
 
 // at first, a 0x1000 space is reserved for timer list and task list
-extern char _heap_start;
-static void* ptr = &_heap_start;
-static uint64_t kheap_space = 0;
-static tcache_perthread_struct_t tcache;
-static large_chunk_perthread_struct_t large_chunk;
+static void* s_heap_ptr = STARTUP_HEAP_START;
+list_head_t* slab_cache_pool[SLAB_POOL_COUNT];
 
-uint32_t get_tcache_idx(uint64_t chunk_size) {
-    return (chunk_size - 0x20) / 0x10;
-}
+void* startup_alloc(uint32_t size) {
+    // printf("startup_alloc(0x%X)" ENDL, size);
+    if (size == 0) return NULL;
+    size = align(size, 0x10);
 
-void renew_kheap_space(uint64_t size) {
-    // printf("[+] renew_kheap_space(0x%X)" ENDL, size);
-    kheap_space = align(size, 0x1000);  // renew kheap size
-    size = kheap_space / 0x1000;        // this is page number
-
-    ptr = frame_alloc(size);  // renew ptr
-    // TODO: by now, I don't care about the old ptr
-    // TODO: fail check
-
-    //printf("[+] get new ptr -> 0x%X, space -> 0x%X" ENDL, ptr, kheap_space);
-}
-
-void init_tcache() {
-    for (uint32_t i = 0; i < TCACHE_MAX_BINS; i++) {
-        tcache.counts[i] = 0;
-        tcache.entries[i] = NULL;
+    void* ret = s_heap_ptr;
+    s_heap_ptr += size;
+    if (s_heap_ptr >= STARTUP_HEAP_END) {
+        printf("[-] startup_alloc() out of range!!" ENDL);
+        return NULL;
     }
+    return ret;
+}
+
+slab_cache_t* get_slab_cache_by_addr(void* addr) {
+    slab_cache_t* target;
+    for (uint32_t i = 0; i < SLAB_POOL_COUNT; i++) {
+        list_for_each_entry(target, slab_cache_pool[i], node) {
+            if (addr < target->start || addr >= target->end) continue;
+            return target;
+        }
+    }
+    return NULL;
+}
+
+void init_slab_cache() {
+    for (uint32_t i = 0; i < SLAB_POOL_COUNT; i++) {
+        uint32_t curr_cache_size = slab_size[i];
+
+        // allocate 64 pages
+        void* ptr = frame_alloc(SLAB_CACHE_ALLOC_PAGE_SIZE);
+        printf("[%d] ptr = 0x%X\n", i, ptr);
+        printf("slab size: 0x%X" ENDL, curr_cache_size);
+
+        slab_cache_pool[i] = startup_alloc(sizeof(list_head_t));
+        INIT_LIST_HEAD(slab_cache_pool[i]);
+        slab_cache_t* curr = startup_alloc(sizeof(slab_cache_t));
+        printf("curr addr: 0x%X" ENDL, curr);
+        curr->cache_size = curr_cache_size;
+        curr->start = ptr;
+        INIT_LIST_HEAD(&curr->node);
+        INIT_LIST_HEAD(&curr->free_cache);
+
+        list_add_tail(&curr->node, slab_cache_pool[i]);
+
+        // split the 64 pages into `curr_cache_size` caches
+        uint32_t cache_cnt = (SLAB_CACHE_ALLOC_PAGE_SIZE * 0x1000) / curr_cache_size;
+        printf("cache_cnt: 0x%X" ENDL, cache_cnt);
+        while (cache_cnt--) {
+            INIT_LIST_HEAD(ptr);
+            // printf("ptr: 0x%X" ENDL, ptr);
+            list_add_tail(ptr, &curr->free_cache);
+            ptr += curr_cache_size;
+            // ddd();
+        }
+        curr->end = ptr;
+        // ddd();
+        printf(ENDL);
+    }
+}
+
+void* slab_alloc(uint64_t size) {
+    if (size == 0) return NULL;
+    // printf("slab_alloc(%d)" ENDL, size);
+    uint32_t alloc_size;
+    list_head_t* ret = NULL;
+    for (uint32_t i = 0; i < SLAB_POOL_COUNT; i++) {
+        alloc_size = slab_size[i];
+        if (alloc_size < size) continue;
+
+        slab_cache_t *curr, *temp;
+        // find the first non empty slab_cache_pool
+        list_for_each_entry_safe(curr, temp, slab_cache_pool[i], node) {
+            if (list_empty(&curr->free_cache)) continue;
+            // get the first slab cache
+            ret = curr->free_cache.next;
+            // ddd();
+            list_del(ret);
+            // printf("GOOD ret: 0x%X" ENDL, ret);
+            return ret;
+        }
+    }
+    // printf("ret: 0x%X" ENDL, ret);
+    return ret;
+}
+
+bool slab_free(void* ptr) {
+    slab_cache_t* curr_slab_cache = get_slab_cache_by_addr(ptr);
+    if (curr_slab_cache == NULL) return false;
+
+    list_head_t* new_free_cache = ptr;
+    INIT_LIST_HEAD(new_free_cache);
+
+    list_add_tail(new_free_cache, &curr_slab_cache->free_cache);  // add the free ptr to free_cache
+    return true;
 }
 
 void* kmalloc(uint64_t size) {
     disable_intr();
-    // The smallest chunk size is 0x20 -> at least 0x18 can be used
-    //if (size < 0x18) size = 0x18;
-    size += 0x8;
-    if (size < 0x20) size = 0x20;
-
-    // 0x10 alignment
-    //size = (size + 0x17) & 0xfffffff0;
-    size = align(size, 0x10);
-
-    // TODO: only support malloc size between 0x20 to 0x410
-    if (size > 0x410) {
-        goto large_chunk_handling;
-    } else if (size < 0x20 || size > 0x410) {
-        printf("[-] kmalloc -> chunk size 0x%X not supported." ENDL, size);
-        while (1)
-            ;
+    void* ret = NULL;
+    if (size == 0) goto kmalloc_end;
+    if (size <= slab_size[SLAB_POOL_COUNT - 1]) {
+        ret = slab_alloc(size);
+    } else {
+        ret = frame_alloc(align(size, 0x1000) / 0x100);
     }
-
-    malloc_chunk_t* ret;  // ptr to chunk head
-
-tcache_handling:
-    // TODO: try getting space from tcache
-    uint32_t idx = get_tcache_idx(size);
-    if (tcache.counts[idx]) {
-        // printf("[++++++++++++] FOUND in tcache!!!" ENDL);
-
-        ret = tcache.entries[idx];
-
-        tcache.entries[idx] = ((tcache_entry_t*)((void*)tcache.entries[idx] + 0x10))->next;
-        // printf("TTTTT 0x%X\n", tcache.entries[idx] + 0x10);
-        // tcache.entries[idx] = container_of((void*)tcache.entries[idx] + 0x10, tcache_entry_t, next);
-        tcache.entries[idx] = (void*)tcache.entries[idx] - 0x10;
-        tcache.counts[idx] -= 1;
-
-        show_tcache();
-        goto kmalloc_end;
-    }
-    goto malloc_new_space;
-
-large_chunk_handling:
-    // try getting space from large_chunk
-    large_chunk_entry_t *tmp = large_chunk.entry, *prev = NULL;
-    for (int i = 0; i < large_chunk.count; i++) {
-        if (tmp->chunk_size >= size) {  // found a chunk!!
-            ret = tmp;
-            if (prev != NULL) {
-                prev->next = tmp->next;
-            } else {
-                large_chunk.entry = tmp->next;
-            }
-            large_chunk.count -= 1;
-            goto kmalloc_end;
-        }
-        prev = tmp;
-        tmp = tmp->next;
-    }
-    goto malloc_new_space;
-
-malloc_new_space:
-    // check if there is enough space to malloc
-    if (size > kheap_space) {  // no space -> call page frame allocator to get more page!!
-        renew_kheap_space(size);
-    }
-
-    // generate the chunk
-    ret = ptr;
-    ret->chunk_size = size;
-
-    // update ptr and space
-    ptr += size;
-    kheap_space -= size;
 
 kmalloc_end:
-    // printf("[+] kmalloc: ptr -> 0x%X, space -> 0x%X" ENDL, ptr, kheap_space);
     enable_intr();
-    // printf("[+] kmalloc(0x%X) @ 0x%X" ENDL, size, ret);
-    return (void*)ret + sizeof(malloc_chunk_t);  // return the data ptr
+    return ret;
 }
 
 void kfree(void* ptr) {
     // return;
     disable_intr();
-    malloc_chunk_t* chunk = ptr - sizeof(malloc_chunk_t);
-    // printf("[+] chunk size to free -> 0x%X @ (0x%X)" ENDL, chunk->chunk_size, ptr);
-
-    if (chunk->chunk_size > 0x410) {
-        goto free_large_chunk;
-    } else if (chunk->chunk_size < 0x20 || chunk->chunk_size > 0x410) {
-        // ddd();
-        printf("[-] kfree -> chunk size 0x%X not supported." ENDL, chunk->chunk_size);
-        while (1)
-            ;
-        return;
-    }
-    uint32_t idx = get_tcache_idx(chunk->chunk_size);
-
-free_tcache:
-    // insert into tcache.entries[idx]
-    if (tcache.entries[idx] != NULL) {
-        ((tcache_entry_t*)ptr)->next = (void*)tcache.entries[idx] + sizeof(tcache_entry_t);
-    } else {
-        ((tcache_entry_t*)ptr)->next = NULL;
-    }
-    tcache.entries[idx] = chunk;
-    tcache.counts[idx] += 1;
-    goto kfree_end;
-
-free_large_chunk:
-    if (large_chunk.entry != NULL) {
-        ((large_chunk_entry_t*)ptr)->next = (void*)large_chunk.entry + sizeof(large_chunk_entry_t);
-    } else {
-        ((large_chunk_entry_t*)ptr)->next = NULL;
-    }
-    large_chunk.entry = chunk;
-    large_chunk.count += 1;
+    if (ptr == NULL) goto kfree_end;
+    if (slab_free(ptr) == true) goto kfree_end;
+    frame_free(ptr);
 
 kfree_end:
-    show_tcache();
     enable_intr();
 }
 
-void show_tcache() {
-    return;
-    printf("[+] ---- tcache" ENDL);
-
-    for (uint32_t i = 0; i < TCACHE_MAX_BINS; i++) {
-        if (tcache.counts[i] == 0) continue;
-        printf("tcache[0x%X]", (i + 2) * 0x10);
-
-        tcache_entry_t* ptr = (void*)tcache.entries[i] + 0x10;  // !! first ptr points to chunk head @@
-        for (uint32_t j = 0; j < tcache.counts[i]; j++) {
-            printf(" -> 0x%X", ptr);
-            ptr = ptr->next;
+void show_slab_cache() {
+    for (uint32_t i = 0; i < SLAB_POOL_COUNT; i++) {
+        slab_cache_t* curr;
+        list_for_each_entry(curr, slab_cache_pool[i], node) {
         }
-        printf(ENDL);
     }
-
-    printf("[+] ----" ENDL);
 }
 
 void ddd() {

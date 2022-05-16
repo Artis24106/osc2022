@@ -7,7 +7,8 @@ void *INITRD_START, *INITRD_END;
 void dtb_init(uint64_t x0) {
     DTB_START = (void*)x0;
     fdt_header_t* header = (fdt_header_t*)DTB_START;
-    DTB_END = DTB_START + header->totalsize;
+    DTB_END = DTB_START + get_be_uint32(&header->totalsize);
+    printf("dtb range 0x%X ~ 0x%X" ENDL, DTB_START, DTB_END);
     dtb_parser(dtb_get_initrd_callback);
 }
 

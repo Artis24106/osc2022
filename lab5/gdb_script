@@ -1,4 +1,4 @@
 gef-remote host.docker.internal:1234
-b *0x7e00660
-c
 b ddd
+b slab_alloc
+c

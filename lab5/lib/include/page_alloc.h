@@ -6,8 +6,10 @@
 #include "list.h"
 #include "printf.h"
 
-#define MEM_REGION_START 0x10000000
-#define MEM_REGION_END 0x20000000
+#define MEM_REGION_START 0x00000000
+#define MEM_REGION_END 0x3B400000
+#define STARTUP_HEAP_START 0x300000
+#define STARTUP_HEAP_END 0xf00000
 #define PAGE_SIZE 0x1000
 
 extern void *DTB_START, *DTB_END;
@@ -16,7 +18,7 @@ extern void *INITRD_START, *INITRD_END;
 // TODO: better define
 #define FRAME_SIZE ((MEM_REGION_END - MEM_REGION_START) / PAGE_SIZE)  // 0x10000 -> 65536
 // #define FRAME_SIZE 8
-#define MAX_ORDER 16 - 1  // log2(0x10000) = 16
+#define MAX_ORDER 17  // log2(0x10000) = 16
 // #define MAX_ORDER 3
 #define FRAME_IS_BUDDY (MAX_ORDER + 1)
 
@@ -37,9 +39,9 @@ enum migratetype {  // TODO: what is this??
 //     uint64_t nr_free;  // TODO: what is this??
 // };
 
-struct free_area {
+typedef struct free_area {
     struct list_head free_list;
-};
+} free_area_t;
 
 typedef struct frame {
     struct list_head node;
@@ -47,6 +49,8 @@ typedef struct frame {
     uint32_t val;       // order (only active when is_used == true)
     uint32_t page_fpn;  // frame page number (index)
 } frame_t;
+
+void* startup_alloc(uint32_t size);
 
 uint32_t __find_buddy_pfn(uint32_t page_fpn, uint32_t order);
 

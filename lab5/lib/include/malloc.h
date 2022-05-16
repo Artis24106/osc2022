@@ -11,53 +11,33 @@
 #define align(number, base) \
     ((number + (base - 1)) & (~(base - 1)))
 
-/*
-    | -------------------------------- |
-    | prev_size/prev_data | chunk_size |
-    |       8 bytes       |   8 bytes  |
-    | -------------------------------- |
-    |               data               |
-    | -------------------------------- |
-*/
-typedef struct malloc_chunk {
-    uint64_t prev_size;
-    uint64_t chunk_size;  // chunk size
-} malloc_chunk_t;
+#define SLAB_POOL_COUNT 15
+static const uint32_t slab_size[SLAB_POOL_COUNT] = {
+    0x10, 0x20, 0x30, 0x60, 0x80, 0x100, 0x200, 0x400, 0x800,
+    0xc00, 0x1000, 0x2000, 0x4000, 0x8000, 0x10000};
 
-// https://code.woboq.org/userspace/glibc/malloc/malloc.c.html#tcache_entry
-typedef struct tcache_entry {
-    struct tcache_entry* next;
+#define SLAB_CACHE_ALLOC_PAGE_SIZE ((4 * slab_size[SLAB_POOL_COUNT - 1]) / 0x1000)  // 64
 
-    /* This field is exists to detect double frees */
-    struct tcache_perthread_struct* key;
-} tcache_entry_t;
+typedef struct slab_cache {
+    uint32_t cache_size;  // the cache size
 
-typedef struct large_chunk_entry {
-    struct large_chunk_entry* next;
-    uint64_t chunk_size;
-} large_chunk_entry_t;
+    // save the slab cache range to determine the cache size of freed addr
+    void* start;
+    void* end;
 
-// TCACHE_MAX_BINS = 64
-// which stores 0x20 ~ 0x410 chunk size
-typedef struct tcache_perthread_struct {
-    uint16_t counts[TCACHE_MAX_BINS];
-    tcache_entry_t* entries[TCACHE_MAX_BINS];
-} tcache_perthread_struct_t;
+    list_head_t node;        // link to next slab cache (same size)
+    list_head_t free_cache;  // store avaliable cache
+} slab_cache_t;
 
-// chunk with size larger than 0x410
-typedef struct large_chunk_perthread_struct {
-    uint16_t count;
-    large_chunk_entry_t* entry;
-} large_chunk_perthread_struct_t;
-
-uint32_t get_tcache_idx(uint64_t chunk_size);
-void renew_kheap_space(uint64_t size);
-void init_tcache();
+slab_cache_t* get_slab_cache_by_addr(void* addr);
+void init_slab_cache();
+void* slab_alloc(uint64_t size);
+bool slab_free(void* ptr);
 
 void* kmalloc(uint64_t size);
 void kfree(void* ptr);
 
-void show_tcache();
+void show_slab_cache();
 
 void ddd();
 

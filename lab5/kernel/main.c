@@ -17,14 +17,18 @@ void foo() {
 }
 
 void test() {
-    void* a = frame_alloc(1);
-    frame_free(a);
-    void* b = frame_alloc(2);
-    void* c = frame_alloc(1);
-    void* d = frame_alloc(1);
-    frame_free(b);
-    frame_free(c);
-    frame_free(d);
+    void* a = frame_alloc(64);
+    void* b = frame_alloc(64);
+    void* c = frame_alloc(64);
+    void* d = frame_alloc(64);
+    printf("0x%X, 0x%X, 0x%X, 0x%X" ENDL, a, b, c, d);
+    // frame_free(a);
+    // void* b = frame_alloc(2);
+    // void* c = frame_alloc(1);
+    // void* d = frame_alloc(1);
+    // frame_free(b);
+    // frame_free(c);
+    // frame_free(d);
 
     // uint32_t c = 0x20;
 }
@@ -35,9 +39,9 @@ void kernel_main(char* x0) {
 
     // initialize the page frame allocator
     frame_init();
-
-    // simply initialize tcache_perthread_struct here
-    init_tcache();
+    // test();
+    // initialize slab cache
+    init_slab_cache();
 
     // initialize the timer and task list
     timer_list_init();

@@ -2,9 +2,11 @@
 
 void exec(char* file_data, uint32_t data_size) {
     // char* ustack = kmalloc(USTACK_SIZE);
-    char* ustack = frame_alloc(USTACK_SIZE / 0x1000);
+    // char* ustack = frame_alloc(USTACK_SIZE / 0x1000);
+    char* ustack = kmalloc(USTACK_SIZE);
 
-    char* file_ptr = frame_alloc(data_size / 0x1000);  // memcpy, so the address will align 0x1000
+    // char* file_ptr = frame_alloc(data_size / 0x1000);  // memcpy, so the address will align 0x1000
+    char* file_ptr = kmalloc(data_size);
     printf("file_ptr: 0x%X" ENDL, file_ptr);
     memcpy(file_ptr, file_data, data_size);
 
@@ -14,9 +16,11 @@ void exec(char* file_data, uint32_t data_size) {
 }
 
 void _exec(char* file_data, uint32_t data_size, trap_frame_t* tf) {
-    char* ustack = frame_alloc(USTACK_SIZE / 0x1000);
+    // char* ustack = frame_alloc(USTACK_SIZE / 0x1000);
+    char* ustack = kmalloc(USTACK_SIZE);
 
-    char* file_ptr = frame_alloc(data_size / 0x1000);  // memcpy, so the address will align 0x1000
+    // char* file_ptr = frame_alloc(data_size / 0x1000);  // memcpy, so the address will align 0x1000
+    char* file_ptr = kmalloc(data_size);
     memcpy(file_ptr, file_data, data_size);
     tf->x30 = file_ptr;
     tf->sp_el0 = ustack + THREAD_STACK_SIZE - 8;
