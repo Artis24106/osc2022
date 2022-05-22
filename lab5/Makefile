@@ -1,9 +1,12 @@
+include config.mk
+
 .PHONY: clean directories out_elf run docker_cp
 
 all: 
 	make -C lib
 	make -C kernel
-	# make -C bootloader
+	make -C bootloader
+	$(call log,Compile successfully!!)
 
 run:
 	qemu-system-aarch64 -M raspi3b -kernel kernel/kernel.img -display none -serial null -serial stdio -initrd initramfs.cpio -dtb bcm2710-rpi-3-b-plus.dtb

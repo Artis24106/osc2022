@@ -40,13 +40,6 @@ uint32_t get_be_uint32(void *ptr) {
 
 char *memcpy(void *dest, const void *src, uint64_t len) {
     char *d = dest;
-    if (&rq != NULL) {
-        // printf("rq_ptr = 0x%X" ENDL, &rq);
-        if ((char *)dest - (char *)&rq < 0x10000) {
-            // ddd();
-            printf("QQQQQ" ENDL);
-        }
-    }
     while (len--) *d++ = *(char *)src++;
     return dest;
 }

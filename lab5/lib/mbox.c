@@ -22,11 +22,7 @@
 
 int mbox_call(mail_t* mbox, uint8_t ch) {
     unsigned long magic = (((unsigned long)((unsigned long)mbox) & ~0xF) | (ch & 0xF));
-    printf("0x%X, 0x%X" ENDL, ch, (unsigned long)mbox);
-    printf("0x%X, 0x%X" ENDL, (ch & 0xF), ((unsigned long)((unsigned long)mbox) & ~0xF));
-    printf("magic: 0x%X" ENDL, magic);
     // r = 0x3B220E08;
-    ddd();
     /* wait until we can write to the mailbox */
     do {
         asm volatile("nop");

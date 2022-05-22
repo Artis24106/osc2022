@@ -35,13 +35,13 @@ void init_slab_cache() {
 
         // allocate 64 pages
         void* ptr = frame_alloc(SLAB_CACHE_ALLOC_PAGE_SIZE);
-        printf("[%d] ptr = 0x%X\n", i, ptr);
-        printf("slab size: 0x%X" ENDL, curr_cache_size);
+        // printf("[%d] ptr = 0x%X\n", i, ptr);
+        // printf("slab size: 0x%X" ENDL, curr_cache_size);
 
         slab_cache_pool[i] = startup_alloc(sizeof(list_head_t));
         INIT_LIST_HEAD(slab_cache_pool[i]);
         slab_cache_t* curr = startup_alloc(sizeof(slab_cache_t));
-        printf("curr addr: 0x%X" ENDL, curr);
+        // printf("curr addr: 0x%X" ENDL, curr);
         curr->cache_size = curr_cache_size;
         curr->start = ptr;
         INIT_LIST_HEAD(&curr->node);
@@ -51,7 +51,7 @@ void init_slab_cache() {
 
         // split the 64 pages into `curr_cache_size` caches
         uint32_t cache_cnt = (SLAB_CACHE_ALLOC_PAGE_SIZE * 0x1000) / curr_cache_size;
-        printf("cache_cnt: 0x%X" ENDL, cache_cnt);
+        // printf("cache_cnt: 0x%X" ENDL, cache_cnt);
         while (cache_cnt--) {
             INIT_LIST_HEAD(ptr);
             // printf("ptr: 0x%X" ENDL, ptr);

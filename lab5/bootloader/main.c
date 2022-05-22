@@ -1,5 +1,6 @@
 #include "stdint.h"
 #include "string.h"
+#include "uart_boot.h"
 
 extern char _kernel_start[];  // 0x80000
 char buf[0x100];
@@ -28,7 +29,8 @@ void load_kernel() {
 void read_cmd() {
     char tmp;
     uart_write_string("# ");
-    for (buf_idx = 0; uart_read(&tmp, 1);) {
+    for (buf_idx = 0;;) {
+        uart_read(&tmp, 1);
         switch (tmp) {
             case '\r':
             case '\n':

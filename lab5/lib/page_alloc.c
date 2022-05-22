@@ -127,12 +127,12 @@ void* frame_alloc(uint32_t fp) {
 #endif
     void* retaddr = NULL;
     uint32_t order = fp2ord(fp);
-    printf("order: %d\n", order);
+    // printf("order: %d\n", order);
 
     // find from free_area
     frame_t* frame = get_frame_from_freelist(order);
     if (frame) {  // found a frame in free_area
-        printf("[+] frame found -> %d" ENDL, frame->page_fpn);
+        // printf("[+] frame found -> %d" ENDL, frame->page_fpn);
         while (true) {
             if (frame->val <= order) break;
 

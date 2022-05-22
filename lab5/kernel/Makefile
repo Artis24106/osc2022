@@ -1,3 +1,5 @@
+include ../config.mk
+
 BUILD_DIR = ./build
 # Lib
 LIB_SRC_DIR = ../lib
@@ -30,15 +32,6 @@ APP_BUILD_DIR = $(BUILD_DIR)/app
 APP_OBJS := $(patsubst %.c,$(APP_BUILD_DIR)/%.o,$(notdir $(APP_SRC)))
 APP_OBJS += $(patsubst %.S,$(APP_BUILD_DIR)/%.o,$(notdir $(APP_ASM)))
 
-# ARM toolchain
-CROSS = aarch64-unknown-linux-gnu
-CC = $(CROSS)-gcc
-AS = $(CROSS)-as
-LD = $(CROSS)-ld
-OC = $(CROSS)-objcopy
-OD = $(CROSS)-objdump
-SP = $(CROSS)-strip
-
 # Project
 OUT_OBJS = \
 	$(LIB_OBJS) \
@@ -53,56 +46,36 @@ OUT_ELF = ./$(PROJ).elf
 OUT_IMG = ./$(PROJ).img
 LINKER_FILE = linker.ld
 
-CCFLAGS = -Wall -O0 -fno-builtin
-LDFLAGS = -T$(LINKER_FILE) -nostdlib -nostartfiles
-
 .PHONY: clean directories out_elf run
-all: directories $(OUT_ELF) $(OUT_IMG)
+all: pre_build directories $(OUT_ELF) $(OUT_IMG)
+pre_build:
+	$(call show_header,${PROJ})
 directories: $(BUILD_DIRECTORIES)
 out_elf: directories $(OUT_ELF)
 out_img: directories $(OUT_IMG)
 
 # Compile Object Files ---------------------------------------------------------
 $(APP_BUILD_DIR)/%.o : %.c
-	@echo '============================================================'
-	@echo ' Building target: $@'
-	@echo '============================================================'
-	@echo "[+] Building: $<"
+	$(call show,$@)
 	$(CC) $(CCFLAGS) $(APP_INCLUDES) -g -o $@ -c $<
-	@echo "[+] Finish Building: $<"
-	@echo ''
 
 $(APP_BUILD_DIR)/%.o : %.S
-	@echo '============================================================'
-	@echo ' Building target: $@'
-	@echo '============================================================'
-	@echo "[+] Building: $<"
+	$(call show,$@)
 	$(CC) $(ASMFLAGS) $(APP_INCLUDES) -g -o $@ -c $<
-	@echo "[+] Finish Building: $<"
-	@echo ''
 
 # Generate ELF -----------------------------------------------------------------
 $(OUT_ELF): $(OUT_OBJS)
-	@echo '============================================================'
-	@echo ' Building target: $@'
-	@echo '============================================================'
+	# $(call show,$@)
 	$(LD) $(LDFLAGS) -o $@ $(OUT_OBJS)
 	$(OD) -d $@ > $(BUILD_DIR)/$(PROJ).objdump
 	# $(SP) $@
-	@echo '[+] Finish Building target: $@'
-	@echo ' '
 
 # Generate IMG -----------------------------------------------------------------
 $(OUT_IMG): $(OUT_ELF)
-	@echo '============================================================'
-	@echo ' Building target: $@'
-	@echo '============================================================'
+	$(call show,$@)
 	$(OC) -O binary $(OUT_ELF) $@
-	@echo '[+] Finish Building target: $@'
-	@echo ' '
 
 $(BUILD_DIRECTORIES):
-	@echo $(OUT_OBJS)
 	mkdir -p $@
 
 clean:

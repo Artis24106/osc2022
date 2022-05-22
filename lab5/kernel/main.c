@@ -69,9 +69,10 @@ void kernel_main(char* x0) {
 
     main_thread_init();
 
-    // for (int i = 0; i < 3; i++) {
-    //     create_kern_task(foo, NULL);
-    // }
+    printf("[+] start" ENDL);
+    for (int i = 0; i < 3; i++) {
+        create_kern_task(foo, NULL);
+    }
 
     cpio_newc_parser(cpio_exec_sched_callback, "syscall.img");
     // cpio_newc_parser(cpio_exec_callback, "syscall.img");
