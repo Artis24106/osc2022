@@ -68,12 +68,14 @@ void frame_init() {
 
     // handle reserved memory
     // 1. reserve frames
-    memory_reserve(INITRD_START, INITRD_END);              // initrd
-    memory_reserve(DTB_START, DTB_END);                    // dtb
+    memory_reserve(0x0, 0x1000);                           // spin table for multicore boot
+    memory_reserve(0x60000, 0x80000);                      // TODO: bootloader image ???
+    memory_reserve(0x80000, 0xd0000);                      // kernel image
+    memory_reserve(INITRD_START, INITRD_END);              // initramfs
+    memory_reserve(DTB_START, DTB_END);                    // devicetree
     memory_reserve(STARTUP_HEAP_START, STARTUP_HEAP_END);  // startup allocator
-    memory_reserve(0x80000, 0x200000);                     // kernel
-    memory_reserve(0x70000, 0x80000);                      // TODO: not sure about that
-    memory_reserve(0x0, 0x1000);                           // TODO: spin table
+    memory_reserve(0x180000, 0x260000);
+    // memory_reserve(0x0, 0x2C000000);
 
     // ddd();
     // 2. merge the unused frames
@@ -93,7 +95,6 @@ void frame_init() {
             if (frame_list[fpn]->is_used || frame_list[buddy]->is_used) continue;
             frame_list[buddy]->val = FRAME_IS_BUDDY;
             frame_list[fpn]->val += 1;
-            // printf("[+] 0x%X, 0x%X, 0x%X" ENDL, fpn, buddy, frame_list[fpn].val);
 
             // record the first modified fpn
             if (!modified) first_fpn = fpn;
@@ -127,12 +128,10 @@ void* frame_alloc(uint32_t fp) {
 #endif
     void* retaddr = NULL;
     uint32_t order = fp2ord(fp);
-    // printf("order: %d\n", order);
 
     // find from free_area
     frame_t* frame = get_frame_from_freelist(order);
     if (frame) {  // found a frame in free_area
-        // printf("[+] frame found -> %d" ENDL, frame->page_fpn);
         while (true) {
             if (frame->val <= order) break;
 
@@ -150,7 +149,6 @@ void* frame_alloc(uint32_t fp) {
         // now the frame is allocated
         frame->is_used = true;
         retaddr = fpn2addr(frame->page_fpn);
-        //printf("[+] Frame allocated -> 0x%X (0x%X)" ENDL, retaddr, 0x1000 * (1 << frame->val));
     } else {  // no space to allocate @@
         printf("[+] No frame to allocate!!" ENDL);
     }
@@ -164,8 +162,7 @@ void* frame_alloc(uint32_t fp) {
 
 void frame_free(void* addr) {
     uint32_t fpn = addr2fpn(addr);
-    frame_t *frame = &frame_list[fpn],
-            *curr;
+    frame_t* frame = &frame_list[fpn];
 
 #ifdef DEBUG_PAGE_ALLOC
     printf("--------------[DEBUG] frame_free(%d)" ENDL, fpn);
@@ -197,11 +194,12 @@ void frame_free(void* addr) {
         if (buddy < min_fpn) min_fpn = buddy;
 
         // remove the buddy from freelist
-        // TODO: safty
-        list_for_each_entry(curr, &free_area[curr_val]->free_list, node) {
+        frame_t *curr, *temp;
+        list_for_each_entry_safe(curr, temp, &free_area[curr_val]->free_list, node) {
             if (curr->page_fpn == buddy) {
                 curr->val = 0;  // TODO:
                 list_del(&curr->node);
+                kfree(&curr->node);
                 break;
             }
         }
@@ -237,15 +235,16 @@ void memory_reserve(void* start, void* end) {
 #ifdef DEBUG_PAGE_ALLOC
     printf("[+] memory_reserve(0x%X, 0x%X)" ENDL, start, end);
 #endif
-    printf("[+] memory_reserve(0x%X, 0x%X)" ENDL, start, end);
 
     uint32_t start_fpn = addr2fpn(start),
              end_fpn = addr2fpn(end - 1);
+    printf("[+] memory_reserve_t(0x%X, 0x%X)" ENDL, start_fpn * 0x1000, (end_fpn + 1) * 0x1000);
 
-    // printf("[+] %d ~ %d" ENDL, start_fpn, end_fpn);
     for (uint32_t fpn = start_fpn; fpn <= end_fpn; fpn++) {
         if (frame_list[fpn]->is_used) {  // TODO: simple check
             printf("[+] The reserved memory is used (0x%X ~ 0x%X)" ENDL, start, end);
+            while (1)
+                ;
         }
         frame_list[fpn]->is_used = true;
     }

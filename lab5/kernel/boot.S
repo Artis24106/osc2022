@@ -45,6 +45,10 @@ el1_start:
     ldr     x20, =_start
     mov     sp, x20
 
+    // enable timer
+    mov     x20, 1
+    msr     cntp_ctl_el0, x20
+
     // jump to C code, should not return
     bl      kernel_main
 5:
@@ -206,9 +210,14 @@ _lower_el_aarch64_sync: // svc handler
     eret 
 
 _lower_el_aarch64_irq:
+    ; msr DAIFSet, 0xf // disable interrupt
+
     save_all
     bl      irq_handler
+    bl      try_schedule
     load_all
+
+    msr DAIFClr, 0xf // enable interrupt
     eret
 
 _invalid_exception:

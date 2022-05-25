@@ -35,13 +35,10 @@ void init_slab_cache() {
 
         // allocate 64 pages
         void* ptr = frame_alloc(SLAB_CACHE_ALLOC_PAGE_SIZE);
-        // printf("[%d] ptr = 0x%X\n", i, ptr);
-        // printf("slab size: 0x%X" ENDL, curr_cache_size);
 
         slab_cache_pool[i] = startup_alloc(sizeof(list_head_t));
         INIT_LIST_HEAD(slab_cache_pool[i]);
         slab_cache_t* curr = startup_alloc(sizeof(slab_cache_t));
-        // printf("curr addr: 0x%X" ENDL, curr);
         curr->cache_size = curr_cache_size;
         curr->start = ptr;
         INIT_LIST_HEAD(&curr->node);
@@ -51,17 +48,12 @@ void init_slab_cache() {
 
         // split the 64 pages into `curr_cache_size` caches
         uint32_t cache_cnt = (SLAB_CACHE_ALLOC_PAGE_SIZE * 0x1000) / curr_cache_size;
-        // printf("cache_cnt: 0x%X" ENDL, cache_cnt);
         while (cache_cnt--) {
             INIT_LIST_HEAD(ptr);
-            // printf("ptr: 0x%X" ENDL, ptr);
             list_add_tail(ptr, &curr->free_cache);
             ptr += curr_cache_size;
-            // ddd();
         }
         curr->end = ptr;
-        // ddd();
-        printf(ENDL);
     }
 }
 
@@ -102,7 +94,9 @@ bool slab_free(void* ptr) {
 }
 
 void* kmalloc(uint64_t size) {
+    uint32_t daif = get_intr();
     disable_intr();
+
     void* ret = NULL;
     if (size == 0) goto kmalloc_end;
     if (size <= slab_size[SLAB_POOL_COUNT - 1]) {
@@ -112,19 +106,24 @@ void* kmalloc(uint64_t size) {
     }
 
 kmalloc_end:
-    enable_intr();
+    // enable_intr();
+    set_intr(daif);
+    // printf("kmalloc() -> 0x%X" ENDL, ret);
     return ret;
 }
 
 void kfree(void* ptr) {
     // return;
+    uint32_t daif = get_intr();
     disable_intr();
+
     if (ptr == NULL) goto kfree_end;
     if (slab_free(ptr) == true) goto kfree_end;
     frame_free(ptr);
 
 kfree_end:
-    enable_intr();
+    // enable_intr();
+    set_intr(daif);
 }
 
 void show_slab_cache() {

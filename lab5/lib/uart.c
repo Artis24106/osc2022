@@ -167,9 +167,13 @@ void uart_int_handler() {
     } else if (mmio_read(AUX_MU_IIR_REG) & (0b10 << 1)) {  // Receiver holds valid byte -> rx can read
         uart_disable_int(RX);                              // [ Lab3 - AD2 ] 1. masks the device’s interrupt line
         add_task(uart_read_callback, PRIORITY_NORMAL);
-    } else {
-        uart_write_string("[+] uart_int_handler() Error" ENDL);
     }
+    // else {
+    //     uart_write_string("[+] uart_int_handler() Error" ENDL);
+    //     printf("WUT: 0x%X" ENDL, mmio_read(AUX_MU_IIR_REG));
+    //     while (1)
+    //         ;
+    // }
 }
 
 void uart_write_callback() {

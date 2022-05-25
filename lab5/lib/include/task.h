@@ -7,6 +7,7 @@
 #include "string.h"
 
 #define PRIORITY_NORMAL 0xdeadbeef  // normal irq interrupt
+#define PRIORITY_TIMER 0xdeadc0de   // normal timer interrupt, just for debug
 #define PRIORITY_PREEMPTION 0x1337  // high priority
 
 typedef struct task_event {

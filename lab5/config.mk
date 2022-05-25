@@ -23,9 +23,9 @@ define show
 endef
 
 define log
-	@printf "${YELLOW}[~]${NC} ${1}\n"
+	@printf "${YELLOW}[~] ${1}${NC}\n"
 endef
 
 define show_header
-	@printf "${GREEN}[-] ====== ${1} ======\n"
+	@printf "${GREEN}[-] ====== ${1} ======${NC}\n"
 endef

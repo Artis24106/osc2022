@@ -3,22 +3,19 @@
 struct list_head* timer_event_list;
 
 void enable_timer() {
-    // printf("enable_timer()" ENDL);
-    write_sysreg(cntp_ctl_el0, 1);
+    printf("enable_timer()" ENDL);
     *(uint32_t*)CORE0_TIMER_IRQ_CTRL = 2;  // enable rip3 timer interrupt
-
-    struct list_head* curr;
 }
 
 void disable_timer() {
-    // printf("disable_timer()" ENDL);
+    printf("disable_timer()" ENDL);
     *(uint32_t*)CORE0_TIMER_IRQ_CTRL = 0;  // disable rip3 timer interrupt
 }
 
 void timer_handler() {
     disable_timer();  // [ Lab3 - AD2 ] 1. masks the device’s interrupt line,
-    // add_task(timer_callback, PRIORITY_NORMAL); // TODO: task or just call `call_schedule`?
-    call_schedule();
+    // add_task(timer_callback, PRIORITY_NORMAL); // TODO: task or just call `try_schedule`?
+    try_schedule();
 }
 
 void timer_callback() {
@@ -35,17 +32,16 @@ void timer_callback() {
 
     // disable_timer();
     // remove the first event
-    void* bk = timer_event_list->next;
-    // list_del(timer_event_list->next);
-    list_del(bk);
+    void* bk = target;
+    list_del(&target->node);
     kfree(bk);
 
     // if there is next event, set next timeout
     if (list_empty(timer_event_list)) {
-        set_timeout_rel(65535);
+        // set_timeout_rel(65535);
     } else {
         target = container_of(timer_event_list->next, timer_event_t, node);
-        set_timeout_abs(target->tval);
+        // set_timeout_abs(target->tval);
     }
 
 timer_callback_end:
@@ -81,7 +77,7 @@ void add_timer(void* callback, char* args, uint64_t timeout, bool is_abs) {
     }
 
     // if the list is empty, set first event interrupt
-    if (list_empty(timer_event_list)) set_timeout_abs(t_event->tval);
+    // if (list_empty(timer_event_list)) set_timeout_abs(t_event->tval);
 
     // insert node
     timer_event_t* curr;
@@ -98,7 +94,7 @@ void add_timer(void* callback, char* args, uint64_t timeout, bool is_abs) {
     // show_timer_list();
     // if the first element is updated, should renew the timeout
     // enable_timer();
-    if (is_first_node) set_timeout_abs(t_event->tval);
+    // if (is_first_node) set_timeout_abs(t_event->tval);
 
     enable_intr();
 }
@@ -131,16 +127,16 @@ void show_time_callback(char* args) {
 }
 
 void sched_callback() {
-    // printf("sched_callback()" ENDL);
-    call_schedule();
+    printf("sched_callback()" ENDL);
+    try_schedule();
     uint64_t x0 = read_sysreg(cntfrq_el0);
-    // add_timer(sched_callback, NULL, x0 >> 8, false);
     add_timer(sched_callback, NULL, x0 >> 5, false);
+    enable_timer();
 }
 
 void set_timeout_rel(uint64_t timeout) {  // relative -> cntp_tval_el0
     uint64_t x0 = read_sysreg(cntfrq_el0);
-    write_sysreg(cntp_tval_el0, x0);
+    write_sysreg(cntp_tval_el0, x0 >> timeout);
 }
 
 void set_timeout_abs(uint64_t timeout) {  // absoulute -> cntp_cval_el0

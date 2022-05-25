@@ -13,6 +13,7 @@ uint32_t rq_len = 0,
 uint64_t current_pid = 1;  // TODO: why this is needed
 
 void idle() {
+    printf("idle()" ENDL);
     while (true) {
         kill_zombies();
         schedule();
@@ -38,37 +39,47 @@ void kill_zombies() {
 
 void schedule() {
     if (rq_len <= 1) return;  // scheduling is not necessary
+    uint32_t daif = get_intr();
+    disable_intr();
     // show_q();
     // get next task
     task_struct_t* next = next_task(current);
-    // printf("sch switch_to()" ENDL);
-    // enable_timer();
-    update_timer();
+    set_intr(daif);
+    printf("sch switch_to()" ENDL);
+    // show_task(next);
+    // update_timer();
+    // set_timeout_rel(10000);
     switch_to(current, &next->info);
 }
 
-void call_schedule() {  // schedule callback for timer
-    // printf("call_schedule()" ENDL);
-    schedule();
+void try_schedule() {  // schedule callback for timer
+    // printf("try_schedule()" ENDL);
+    // printf("rq_len -> %d" ENDL, rq_len);
+    if (current->time == 0) {
+        schedule();
+        current->time = 1;
+    }
+
+    update_timer();
 }
 
 void main_thread_init() {
+    printf("main_thread_init()" ENDL);
     main_task = new_task();
     main_task->pid = 0;
     main_task->status = RUNNING;
     main_task->prio = 1;
     main_task->user_stack = 0;
-    main_task->kernel_stack = 0x100000;  // TODO: somewhere else
+    main_task->kernel_stack = STARTUP_HEAP_END;  // TODO: somewhere else
     INIT_LIST_HEAD(&main_task->node);
 
     rq_len += 1;
-    // list_add_tail(&main_task->node, &rq);
-    list_add(&main_task->node, rq.next);
+    list_add(&main_task->node, rq.next);  // add main task into run queue
+
     write_sysreg(tpidr_el1, main_task);
-    // add_timer(sched_callback, NULL, 0x10000, false);
+
     uint64_t x0 = read_sysreg(cntfrq_el0);
-    add_timer(sched_callback, NULL, x0 >> 5, false);
-    schedule();
+    // add_timer(sched_callback, NULL, x0 >> 5, false);
 }
 
 void thread_create(void* start) {
@@ -131,7 +142,7 @@ uint32_t create_kern_task(void (*func)(), void* arg) {
     // malloc kernel stack
     info->sp = kmalloc(THREAD_STACK_SIZE);
     task->kernel_stack = info->sp;
-    info->sp += THREAD_STACK_SIZE - 8;  // TODO: not sure about the `-8` part
+    info->sp += THREAD_STACK_SIZE - 0x10;  // XXX: stack alignment???
     info->fp = info->sp;
 
     // the trampoline will swap some registers, then call the function
@@ -139,10 +150,10 @@ uint32_t create_kern_task(void (*func)(), void* arg) {
     //  -> func(argv)
     info->lr = _kern_thread_trampoline;  // link register -> hold the return address
 
-    disable_intr();
+    // disable_intr();
     list_add_tail(&task->node, &rq);
     rq_len += 1;
-    enable_intr();
+    // enable_intr();
 }
 
 uint32_t create_user_task(void (*func)(), void* arg) {
@@ -161,14 +172,14 @@ uint32_t create_user_task(void (*func)(), void* arg) {
     info->sp = kmalloc(THREAD_STACK_SIZE);
     printf("stack: 0x%X" ENDL, info->sp);
     task->kernel_stack = info->sp;
-    info->sp += THREAD_STACK_SIZE - 8;  // TODO: not sure about the `-8` part
+    info->sp += THREAD_STACK_SIZE - 0x10;  // TODO: not sure about the `-8` part
     info->fp = info->sp;
 
     // malloc user stack
     info->x20 = kmalloc(THREAD_STACK_SIZE);
     printf("user stack: 0x%X" ENDL, info->x20);
     task->user_stack = info->x20;
-    info->x20 += THREAD_STACK_SIZE - 8;
+    info->x20 += THREAD_STACK_SIZE;
 
     // the trampoline will change from el1 to el0
     info->lr = _user_thread_trampoline;  // link register -> hold the return address
@@ -268,8 +279,24 @@ void show_q() {
     printf(ENDL);
 }
 
+uint32_t update_cnt = 0;
 void update_timer() {
+    printf("update_timer(0x%X)\r\n", update_cnt++);
     uint64_t x0 = read_sysreg(cntfrq_el0);
-    write_sysreg(cntp_tval_el0, x0 >> 5);
+    // set_timeout_abs(get_absolute_time(0) + 0x1000000);
+    set_timeout_rel(5);
     enable_timer();
+}
+
+void show_task(task_struct_t* task) {
+    printf("show_task(0x%X)" ENDL, task);
+    printf("\t-> info = 0x%X" ENDL, task->info);
+    printf("\t-> pid = 0x%X" ENDL, task->pid);
+    printf("\t-> status = 0x%X" ENDL, task->status);
+    printf("\t-> exit_code = 0x%X" ENDL, task->exit_code);
+    printf("\t-> prio = 0x%X" ENDL, task->prio);
+    printf("\t-> time = 0x%X" ENDL, task->time);
+    printf("\t-> user_stack = 0x%X" ENDL, task->user_stack);
+    printf("\t-> kernel_stack = 0x%X" ENDL, task->kernel_stack);
+    printf(ENDL);
 }

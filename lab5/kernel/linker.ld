@@ -33,11 +33,12 @@ SECTIONS
     _bss_end = .;
     _bss_size = _bss_end - _bss_start;
 
-    _heap_start = .;
-    . = ALIGN(0x1000);
-    _heap_end = .;
-
     _el1_stack_start = .;
     . = ALIGN(0x1000);
     _el1_stack_end = .;
+    
+    . = 0x300000;
+    _heap_start = .;
+    . = ALIGN(0x1000);
+    _heap_end = .;
 }

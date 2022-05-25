@@ -6,7 +6,7 @@ all:
 	make -C lib
 	make -C kernel
 	make -C bootloader
-	$(call log,Compile successfully!!)
+	$(call log,Compile successfully!!\n)
 
 run:
 	qemu-system-aarch64 -M raspi3b -kernel kernel/kernel.img -display none -serial null -serial stdio -initrd initramfs.cpio -dtb bcm2710-rpi-3-b-plus.dtb

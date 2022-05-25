@@ -10,8 +10,10 @@
 
 void foo() {
     for (int i = 0; i < 10; i++) {
-        printf("Thread id: %d %d\n", get_current(), i);
-        delay(1000000);
+        printf("Thread id: 0x%X 0x%X" ENDL, get_current(), i);
+        // while (1)
+        //     ;
+        delay(100000000);
         schedule();
     }
 }
@@ -51,13 +53,6 @@ void kernel_main(char* x0) {
     uart_enable_int(RX | TX);
     uart_enable_aux_int();
 
-    // page_init();
-    // buddy_init();
-    // slab_init();
-
-    enable_intr();
-    // enable_timer();
-    update_timer();
     // TODO: what's that??
     uint64_t tmp;
     asm volatile("mrs %0, cntkctl_el1"
@@ -66,16 +61,20 @@ void kernel_main(char* x0) {
     asm volatile("msr cntkctl_el1, %0"
                  :
                  : "r"(tmp));
-
     main_thread_init();
 
     printf("[+] start" ENDL);
     for (int i = 0; i < 3; i++) {
         create_kern_task(foo, NULL);
     }
+    // show_q();
 
-    cpio_newc_parser(cpio_exec_sched_callback, "syscall.img");
+    // cpio_newc_parser(cpio_exec_sched_callback, "syscall.img");
     // cpio_newc_parser(cpio_exec_callback, "syscall.img");
+
+    update_timer();
+    enable_intr();
+
     idle();
 
     // No shell anymore QQ

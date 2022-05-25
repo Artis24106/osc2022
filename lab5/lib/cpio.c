@@ -153,12 +153,16 @@ void cpio_exec_sched_callback(char* param, cpio_newc_header* header, char* file_
 
     // char* file_ptr = frame_alloc(data_size / 0x1000);  // memcpy, so the address will align 0x1000
     char* file_ptr = kmalloc(data_size + 0x1000);
-    printf("[+] Img base: 0x%X" ENDL, file_ptr);
+    printf("[+] %s base: 0x%X" ENDL, file_name, file_ptr);
     file_ptr += 0x1000;
     file_ptr = (((uint64_t)file_ptr >> 16) << 16);
     // file_ptr = 0x7e00000;
-    printf("[+] img base: 0x%X" ENDL, file_ptr);
+    printf("memcpy(0x%X, 0x%X, 0x%X)" ENDL, file_ptr, file_data, data_size);
+    for (uint32_t i = 0; i < 20; i++) {
+        printf("0x%X ", file_data[i]);
+    }
+    printf(ENDL);
     memcpy(file_ptr, file_data, data_size);
-    // create_user_task(file_ptr, NULL);
+    printf("create_user_task" ENDL);
     create_user_task(file_ptr, 0);
 }

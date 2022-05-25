@@ -2,6 +2,7 @@ from time import sleep
 import serial
 from tqdm import tqdm
 from sys import argv
+import os.path
 # pip3 install pyserial
 
 
@@ -22,10 +23,14 @@ def recv_and_print():
 device = '/dev/ttys005' if len(argv) == 1 else argv[1]
 print("[+]", device)
 baud_rate = 115200
+
+kernel_path = 'kernel/kernel.img'
 data = open('kernel/kernel.img', 'rb', buffering=0).read()
 size = len(data)
 
 '''Start sending'''
+while not os.path.exists(device):
+    pass
 ser = serial.Serial(device, baud_rate)
 
 # magic

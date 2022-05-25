@@ -101,7 +101,7 @@ extern task_struct_t* get_current();
 void idle();
 void kill_zombies();
 void schedule();
-void call_schedule();
+void try_schedule();
 void main_thread_init();
 void thread_create(void* start);
 void thread_release(task_struct_t* target, int16_t ec);
@@ -118,5 +118,6 @@ void _fork_child_trampoline();
 void thread_trampoline(void (*func)(), void* argv);
 
 void show_q();
+void show_task(task_struct_t* task);
 
 #endif

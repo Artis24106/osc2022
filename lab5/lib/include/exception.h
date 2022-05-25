@@ -49,5 +49,7 @@ void irq_handler();
 void invalid_handler();
 void enable_intr();
 void disable_intr();
+uint32_t get_intr();
+void set_intr(uint32_t daif);
 
 #endif

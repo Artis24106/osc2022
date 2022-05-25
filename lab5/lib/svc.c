@@ -14,7 +14,7 @@ void (*sys_tbl[SYS_NUM])(void*) = {
 };
 
 int32_t sys_getpid() {
-    show_q();
+    // show_q();
     // printf("[DEBUG] sys_getpid()" ENDL);
     return current->pid;
 }

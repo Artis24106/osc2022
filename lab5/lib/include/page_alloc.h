@@ -6,6 +6,7 @@
 #include "list.h"
 #include "printf.h"
 
+// Usable memory region: 0x0 ~ 0x3C000000
 #define MEM_REGION_START 0x00000000
 #define MEM_REGION_END 0x3B400000
 #define STARTUP_HEAP_START 0x300000
