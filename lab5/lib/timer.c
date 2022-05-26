@@ -3,19 +3,20 @@
 struct list_head* timer_event_list;
 
 void enable_timer() {
-    printf("enable_timer()" ENDL);
+    // printf("enable_timer()" ENDL);
     *(uint32_t*)CORE0_TIMER_IRQ_CTRL = 2;  // enable rip3 timer interrupt
 }
 
 void disable_timer() {
-    printf("disable_timer()" ENDL);
+    // printf("disable_timer()" ENDL);
     *(uint32_t*)CORE0_TIMER_IRQ_CTRL = 0;  // disable rip3 timer interrupt
 }
 
 void timer_handler() {
-    disable_timer();  // [ Lab3 - AD2 ] 1. masks the device’s interrupt line,
-    // add_task(timer_callback, PRIORITY_NORMAL); // TODO: task or just call `try_schedule`?
-    try_schedule();
+    printf("timer_handler()" ENDL);
+    current->time--;
+
+    // ok, do nothing
 }
 
 void timer_callback() {
@@ -63,7 +64,7 @@ uint64_t get_absolute_time(uint64_t offset) {
 }
 
 void add_timer(void* callback, char* args, uint64_t timeout, bool is_abs) {
-    disable_intr();
+    // disable_intr();
 
     timer_event_t* t_event = kmalloc(sizeof(timer_event_t));
     INIT_LIST_HEAD(&t_event->node);
@@ -96,7 +97,7 @@ void add_timer(void* callback, char* args, uint64_t timeout, bool is_abs) {
     // enable_timer();
     // if (is_first_node) set_timeout_abs(t_event->tval);
 
-    enable_intr();
+    // enable_intr();
 }
 
 void show_timer_list() {
@@ -137,6 +138,7 @@ void sched_callback() {
 void set_timeout_rel(uint64_t timeout) {  // relative -> cntp_tval_el0
     uint64_t x0 = read_sysreg(cntfrq_el0);
     write_sysreg(cntp_tval_el0, x0 >> timeout);
+    // write_sysreg(cntp_tval_el0, 0x10000);
 }
 
 void set_timeout_abs(uint64_t timeout) {  // absoulute -> cntp_cval_el0

@@ -7,7 +7,7 @@
 #include "mmio.h"
 #include "task.h"
 
-#define MAX_BUF_SIZE 0x100
+#define MAX_BUF_SIZE 0x1000
 #define RX (1 << 0)  // read
 #define TX (1 << 1)  // write
 

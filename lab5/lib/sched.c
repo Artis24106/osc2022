@@ -21,7 +21,9 @@ void idle() {
 }
 
 void kill_zombies() {
-    disable_intr();
+    if (dq_len <= 0) return;
+
+    // disable_intr();
 
     // free all tasks in the dead queue
     task_struct_t *curr, *temp;
@@ -34,30 +36,36 @@ void kill_zombies() {
         dq_len -= 1;
     }
 
-    enable_intr();
+    // enable_intr();
 }
 
 void schedule() {
     if (rq_len <= 1) return;  // scheduling is not necessary
-    uint32_t daif = get_intr();
-    disable_intr();
-    // show_q();
+
+    // if (!check_lock()) {
+    //     return;
+    // };
+    // lock();
     // get next task
     task_struct_t* next = next_task(current);
-    set_intr(daif);
-    printf("sch switch_to()" ENDL);
-    // show_task(next);
-    // update_timer();
-    // set_timeout_rel(10000);
+
+    // set_intr(daif);
+    update_timer();
+    // printf("sch switch" ENDL);
+    task_struct_t* curr = current;
+    // printf("curr: 0x%X (0x%X)" ENDL, &curr->node, curr);
+    // show_q();
+    for (uint32_t i = 0; i < 0x1000; i++) asm("nop");
     switch_to(current, &next->info);
 }
 
 void try_schedule() {  // schedule callback for timer
     // printf("try_schedule()" ENDL);
     // printf("rq_len -> %d" ENDL, rq_len);
-    if (current->time == 0) {
+    if (current != NULL && current->time <= 0) {
+        // printf("----------------------------try" ENDL);
         schedule();
-        current->time = 1;
+        current->time = 1;  // TODO: why 1
     }
 
     update_timer();
@@ -74,11 +82,12 @@ void main_thread_init() {
     INIT_LIST_HEAD(&main_task->node);
 
     rq_len += 1;
-    list_add(&main_task->node, rq.next);  // add main task into run queue
+    // list_add(&main_task->node, rq.next);  // add main task into run queue
+    list_add_tail(&main_task->node, &rq);
 
     write_sysreg(tpidr_el1, main_task);
 
-    uint64_t x0 = read_sysreg(cntfrq_el0);
+    // uint64_t x0 = read_sysreg(cntfrq_el0);
     // add_timer(sched_callback, NULL, x0 >> 5, false);
 }
 
@@ -91,7 +100,7 @@ void thread_release(task_struct_t* target, int16_t ec) {
 
     target->exit_code = ec;
     target->status = DEAD;
-
+    uint32_t daif = get_intr();
     disable_intr();
 
     task_struct_t* next = next_task(target);
@@ -107,11 +116,12 @@ void thread_release(task_struct_t* target, int16_t ec) {
 
     // if the current task is dead, switch to the next task
     if (target == current) {
-        enable_intr();
+        // update_timer();
+        set_intr(daif);
         printf("dis switch_to" ENDL);
         switch_to(target, next);
     } else {
-        enable_intr();
+        set_intr(daif);
     }
 }
 
@@ -170,24 +180,22 @@ uint32_t create_user_task(void (*func)(), void* arg) {
 
     // malloc kernel stack
     info->sp = kmalloc(THREAD_STACK_SIZE);
-    printf("stack: 0x%X" ENDL, info->sp);
     task->kernel_stack = info->sp;
-    info->sp += THREAD_STACK_SIZE - 0x10;  // TODO: not sure about the `-8` part
+    info->sp += THREAD_STACK_SIZE;  // TODO: not sure about the `-8` part
     info->fp = info->sp;
 
     // malloc user stack
     info->x20 = kmalloc(THREAD_STACK_SIZE);
-    printf("user stack: 0x%X" ENDL, info->x20);
     task->user_stack = info->x20;
     info->x20 += THREAD_STACK_SIZE;
 
     // the trampoline will change from el1 to el0
     info->lr = _user_thread_trampoline;  // link register -> hold the return address
 
-    disable_intr();
+    // disable_intr();
     list_add_tail(&task->node, &rq);
     rq_len += 1;
-    enable_intr();
+    // enable_intr();
 }
 
 uint32_t _fork(trap_frame_t* tf) {
@@ -201,8 +209,9 @@ uint32_t _fork(trap_frame_t* tf) {
     // copy user, kernel stack
     // task->user_stack = kmalloc(THREAD_STACK_SIZE);
     // task->kernel_stack = kmalloc(THREAD_STACK_SIZE);
-    task->user_stack = kmalloc(THREAD_STACK_SIZE + 8) + 8;
-    task->kernel_stack = kmalloc(THREAD_STACK_SIZE + 8) + 8;
+    task->user_stack = kmalloc(THREAD_STACK_SIZE);
+    task->kernel_stack = kmalloc(THREAD_STACK_SIZE);
+    // printf("child user_stk: 0x%X, kern_stk: 0x%X" ENDL, task->user_stack, task->kernel_stack);
     memcpy(task->user_stack, curr_task->user_stack, THREAD_STACK_SIZE);
     memcpy(task->kernel_stack, curr_task->kernel_stack, THREAD_STACK_SIZE);
 
@@ -221,11 +230,11 @@ uint32_t _fork(trap_frame_t* tf) {
     info->x19 = tf->x30;               // TODO: what's that, elr_el1?
     info->x20 = tf->sp_el0 + usp_off;  // store new sp_el0 in x20
 
-    disable_intr();
+    // disable_intr();
     //TODO: signal handling
     list_add_tail(&task->node, &rq);
     rq_len += 1;
-    enable_intr();
+    // enable_intr();
 
     // set return value
     tf->x0 = task->pid;
@@ -281,9 +290,7 @@ void show_q() {
 
 uint32_t update_cnt = 0;
 void update_timer() {
-    printf("update_timer(0x%X)\r\n", update_cnt++);
-    uint64_t x0 = read_sysreg(cntfrq_el0);
-    // set_timeout_abs(get_absolute_time(0) + 0x1000000);
+    // printf("update_timer(0x%X)\r\n", update_cnt++);
     set_timeout_rel(5);
     enable_timer();
 }

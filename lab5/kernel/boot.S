@@ -210,14 +210,17 @@ _lower_el_aarch64_sync: // svc handler
     eret 
 
 _lower_el_aarch64_irq:
-    ; msr DAIFSet, 0xf // disable interrupt
+    msr DAIFSet, 0xf // disable interrupt
 
     save_all
     bl      irq_handler
     bl      try_schedule
+    
+    mov     x0, sp
+    # bl try_signal_handler
     load_all
 
-    msr DAIFClr, 0xf // enable interrupt
+    # msr DAIFClr, 0xf // enable interrupt
     eret
 
 _invalid_exception:

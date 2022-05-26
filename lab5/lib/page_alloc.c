@@ -68,14 +68,14 @@ void frame_init() {
 
     // handle reserved memory
     // 1. reserve frames
-    memory_reserve(0x0, 0x1000);                           // spin table for multicore boot
-    memory_reserve(0x60000, 0x80000);                      // TODO: bootloader image ???
-    memory_reserve(0x80000, 0xd0000);                      // kernel image
-    memory_reserve(INITRD_START, INITRD_END);              // initramfs
-    memory_reserve(DTB_START, DTB_END);                    // devicetree
-    memory_reserve(STARTUP_HEAP_START, STARTUP_HEAP_END);  // startup allocator
-    memory_reserve(0x180000, 0x260000);
-    // memory_reserve(0x0, 0x2C000000);
+    // memory_reserve(0x0, 0x1000);                           // spin table for multicore boot
+    // memory_reserve(0x60000, 0x80000);                      // TODO: bootloader image ???
+    // memory_reserve(0x80000, 0xd0000);                      // kernel image
+    // memory_reserve(INITRD_START, INITRD_END);              // initramfs
+    // memory_reserve(DTB_START, DTB_END);                    // devicetree
+    // memory_reserve(STARTUP_HEAP_START, STARTUP_HEAP_END);  // startup allocator
+    // memory_reserve(0x180000, 0x260000);
+    memory_reserve(0x0, 0x2C000000);
 
     // ddd();
     // 2. merge the unused frames

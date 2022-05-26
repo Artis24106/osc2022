@@ -31,30 +31,6 @@ void cpio_newc_parser(void* callback, char* param) {
     }
 }
 
-// void cpio_newc_parser_tf(void* callback, char* param, trap_frame_t* tf) {
-//     char *cpio_ptr = INITRD_START,
-//          *file_name, *file_data;
-//     uint32_t name_size, data_size;
-//     cpio_newc_header* header = kmalloc(CPIO_NEWC_HEADER_SIZE);
-
-//     while (1) {
-//         cpio_newc_parse_header(&cpio_ptr, &header);
-//         // cpio_newc_show_header(header);
-
-//         name_size = hex_ascii_to_uint32(header->c_namesize, sizeof(header->c_namesize) / sizeof(char));
-//         data_size = hex_ascii_to_uint32(header->c_filesize, sizeof(header->c_filesize) / sizeof(char));
-
-//         cpio_newc_parse_data(&cpio_ptr, &file_name, name_size, CPIO_NEWC_HEADER_SIZE);
-
-//         cpio_newc_parse_data(&cpio_ptr, &file_data, data_size, 0);
-
-//         if (strcmp(file_name, "TRAILER!!!") == 0) {
-//             break;
-//         }
-//         cpio_exec_callback_tf(param, header, file_name, file_data, data_size, tf);
-//     }
-// }
-
 void cpio_newc_parse_header(char** cpio_ptr, cpio_newc_header** header) {
     *header = *cpio_ptr;
     *cpio_ptr += sizeof(cpio_newc_header) / sizeof(char);
@@ -165,4 +141,41 @@ void cpio_exec_sched_callback(char* param, cpio_newc_header* header, char* file_
     memcpy(file_ptr, file_data, data_size);
     printf("create_user_task" ENDL);
     create_user_task(file_ptr, 0);
+}
+
+void* cpio_get_file(char* file_name) {
+    char *cpio_ptr = INITRD_START,
+         *curr_file_name;
+    uint32_t name_size, data_size;
+    uint32_t header_size = sizeof(cpio_newc_header) / sizeof(char);
+    cpio_newc_header* header = kmalloc(header_size);
+    void* file_buf = NULL;
+
+    while (1) {
+        // parse header
+        memcpy(header, cpio_ptr, header_size);
+        cpio_ptr += header_size;
+
+        // get name_size and data_size
+        name_size = hex_ascii_to_uint32(header->c_namesize, sizeof(header->c_namesize) / sizeof(char));
+        data_size = hex_ascii_to_uint32(header->c_filesize, sizeof(header->c_filesize) / sizeof(char));
+
+        // parse data
+        memcpy(curr_file_name, cpio_ptr, name_size);
+        while ((name_size + header_size) % 4 != 0) name_size += 1;  // add `header_size` is to balance the offset
+        cpio_ptr += name_size;
+
+        if (strcmp(file_name, curr_file_name) == 0) {
+            file_buf = kmalloc(data_size);
+            memcpy(file_buf, cpio_ptr, data_size);
+            break;
+        } else if (strcmp(curr_file_name, "TRAILER!!!") == 0) {
+            break;
+        }
+
+        while (((uint64_t)cpio_ptr % 4) != 0) cpio_ptr += 1;
+        cpio_ptr += data_size;
+    }
+    kfree(header);
+    return file_buf;
 }

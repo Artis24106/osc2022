@@ -194,6 +194,7 @@ void uart_read_callback() {
         return;
     }
     uart_read(&(rx_buf[rx_buf_tail++]), 1);  // transfer pointer!!
+    // for (uint32_t i=)
     rx_buf_tail %= MAX_BUF_SIZE;
 
     // [ Lab3 - AD2 ] 5. unmasks the interrupt line to get the next interrupt at the end of the task.

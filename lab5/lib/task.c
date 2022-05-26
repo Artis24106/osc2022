@@ -14,7 +14,7 @@ void run_task() {
 
     // Simply execute all tasks once irq_handler is triggered
     while (!list_empty(task_event_list)) {
-        show_task_list();
+        // show_task_list();
         // trigger the first task
         task_event_t* t_event = container_of(task_event_list->next, task_event_t, node);
         if (t_event->callback == 0) {  // XXX: check if callback is nullptr

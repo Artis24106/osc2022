@@ -44,4 +44,5 @@ void cpio_exec_callback(char* param, cpio_newc_header* header, char* file_name, 
 // void cpio_exec_callback_tf(char* param, cpio_newc_header* header, char* file_name, char* file_data, uint32_t data_size, trap_frame_t* tf);
 void cpio_exec_sched_callback(char* param, cpio_newc_header* header, char* file_name, uint32_t name_size, char* file_data, uint32_t data_size);
 
+void* cpio_get_file(char* file_name);
 #endif

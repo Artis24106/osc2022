@@ -73,9 +73,10 @@ void svc_handler(trap_frame_t* tf) {  // handle svc0
     // printf("esr_el1 = 0x%X\n", esr_el1);
 
     // EC (Exception Class) should be SVC instruction
-    // if ((esr_el1 >> 26) != 0b010101) {
-    //     invalid_handler(8);
-    // }
+    if ((esr_el1 >> 26) != 0b010101) {
+        printf("[-] Not svc!!" ENDL);
+        invalid_handler(8);
+    }
 
     /*  lab5 svc calling convention
         @args: x0, x1, ...
@@ -95,7 +96,10 @@ void svc_handler(trap_frame_t* tf) {  // handle svc0
             sys_getpid();
             break;
         case 1:
+            // printf("0x%X (0x%X), 0x%X" ENDL, tf->x0, *(char*)tf->x0, tf->x1);
             sys_uartread(tf->x0, tf->x1);
+            printf("-0x%X (0x%X), 0x%X" ENDL, tf->x0, *(char*)tf->x0, tf->x1);
+            for (uint32_t i = 0; i < 0x100000; i++) asm("nop");
             break;
         case 2:
             sys_uartwrite(tf->x0, tf->x1);
@@ -112,6 +116,7 @@ void svc_handler(trap_frame_t* tf) {  // handle svc0
         case 6:
             // ddd();
             sys_mbox_call(tf->x0, tf->x1);
+            // show_q();
             break;
         case 7:
             sys_kill(tf->x0);
@@ -119,7 +124,7 @@ void svc_handler(trap_frame_t* tf) {  // handle svc0
         default:
             break;
     }
-    // disable_intr();
+    disable_intr();
     // sys_tbl[sys_num](tf->x0);  // syscall
     // printf("\n");
 }

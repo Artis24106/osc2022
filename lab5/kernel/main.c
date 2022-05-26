@@ -11,9 +11,11 @@
 void foo() {
     for (int i = 0; i < 10; i++) {
         printf("Thread id: 0x%X 0x%X" ENDL, get_current(), i);
-        // while (1)
-        //     ;
-        delay(100000000);
+        // enable_intr();
+        // update_timer();
+        while (1)
+            ;
+        delay(1000000);
         schedule();
     }
 }
@@ -64,13 +66,19 @@ void kernel_main(char* x0) {
     main_thread_init();
 
     printf("[+] start" ENDL);
-    for (int i = 0; i < 3; i++) {
-        create_kern_task(foo, NULL);
-    }
-    // show_q();
+    // for (int i = 0; i < 3; i++) {
+    //     create_kern_task(foo, NULL);
+    // }
 
-    // cpio_newc_parser(cpio_exec_sched_callback, "syscall.img");
-    // cpio_newc_parser(cpio_exec_callback, "syscall.img");
+    void* file_ptr = cpio_get_file("syscall.img");
+    if (file_ptr == NULL) {
+        printf("[-] syscall.img not found??" ENDL);
+        while (1)
+            ;
+    }
+    printf("[+] syscall.img base: 0x%X" ENDL, file_ptr);
+    printf("create_user_task" ENDL);
+    create_user_task(file_ptr, 0);
 
     update_timer();
     enable_intr();

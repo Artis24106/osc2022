@@ -3,6 +3,7 @@
 
 #include "exec.h"
 #include "list.h"
+#include "lock.h"
 #include "malloc.h"
 #include "string.h"
 

@@ -1,5 +1,7 @@
 .global switch_to
 switch_to:
+    msr DAIFSet, 0xf // disable interrupt
+
     stp x19, x20, [x0, 16 * 0]
     stp x21, x22, [x0, 16 * 1]
     stp x23, x24, [x0, 16 * 2]
@@ -19,6 +21,9 @@ switch_to:
     mov sp,  x9
 
     msr tpidr_el1, x1
+
+    msr DAIFClr, 0xf // enable interrupt after switch_to
+
     ret
 
 .global get_current
@@ -37,8 +42,10 @@ _user_thread_trampoline:
     msr elr_el1, x19    // return to start of file
     msr sp_el0, x20     // stack for EL0
 
-    mov x19, 0
-    msr spsr_el1, x19   // M[4:0] = 0 -> User, 0 -> to enable interrupt in EL0
+    # mov x19, 0
+    # msr spsr_el1, x19   // M[4:0] = 0 -> User, 0 -> to enable interrupt in EL0
+    mov x0, 0x0
+    msr spsr_el1, x0
 
     eret
 

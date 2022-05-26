@@ -95,7 +95,7 @@ bool slab_free(void* ptr) {
 
 void* kmalloc(uint64_t size) {
     uint32_t daif = get_intr();
-    disable_intr();
+    // disable_intr();
 
     void* ret = NULL;
     if (size == 0) goto kmalloc_end;
@@ -115,7 +115,7 @@ kmalloc_end:
 void kfree(void* ptr) {
     // return;
     uint32_t daif = get_intr();
-    disable_intr();
+    // disable_intr();
 
     if (ptr == NULL) goto kfree_end;
     if (slab_free(ptr) == true) goto kfree_end;
