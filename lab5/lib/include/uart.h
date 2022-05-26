@@ -7,7 +7,7 @@
 #include "mmio.h"
 #include "task.h"
 
-#define MAX_BUF_SIZE 0x1000
+#define MAX_BUF_SIZE 0x100
 #define RX (1 << 0)  // read
 #define TX (1 << 1)  // write
 
@@ -27,6 +27,9 @@ void uart_enable_aux_int();
 void uart_enable_int(uint32_t type);
 void uart_disable_int(uint32_t type);
 void uart_int_handler();
+
+void enable_uart();
+void disable_uart();
 
 void uart_write_callback();
 void uart_read_callback();

@@ -1,8 +1,8 @@
 #include "exception.h"
 
 void irq_handler() {
-    // uint32_t daif = get_intr();
-    // disable_intr(); // need not
+    uint32_t daif = get_intr();
+    disable_intr();  // need not
 
     uint64_t c0_int_src = mmio_read(CORE0_IRQ_SRC),
              irq_pend_1 = mmio_read(IRQ_PEND_1),
@@ -17,11 +17,11 @@ void irq_handler() {
         // printf("irq_handler(timer)" ENDL);
         disable_timer();
         current->time--;
-        // add_task(timer_handler, PRIORITY_TIMER);
         return;
     } else if (aux_mu_iir & 0b110) {  // TODO: better condition
         if (aux_mu_iir & 1) goto irq_handler_end;
         // printf("irq_handler(uart)" ENDL);
+        uart_disable_int(TX | RX);
         uart_int_handler();
     } else {
         printf("[-] unkown exception" ENDL);
@@ -34,7 +34,7 @@ void irq_handler() {
     run_task();
 
 irq_handler_end:
-    // set_intr(daif);
+    set_intr(daif);
     // printf("[END] irq_handler()" ENDL);
 }
 

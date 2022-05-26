@@ -178,16 +178,16 @@ uint32_t create_user_task(void (*func)(), void* arg) {
     // store entry point
     info->x19 = func;
 
-    // malloc kernel stack
-    info->sp = kmalloc(THREAD_STACK_SIZE);
-    task->kernel_stack = info->sp;
-    info->sp += THREAD_STACK_SIZE;  // TODO: not sure about the `-8` part
-    info->fp = info->sp;
-
     // malloc user stack
     info->x20 = kmalloc(THREAD_STACK_SIZE);
     task->user_stack = info->x20;
-    info->x20 += THREAD_STACK_SIZE;
+    info->x20 += THREAD_STACK_SIZE - 0x10;
+
+    // malloc kernel stack
+    info->sp = kmalloc(THREAD_STACK_SIZE);
+    task->kernel_stack = info->sp;
+    info->sp += THREAD_STACK_SIZE - 0x10;  // TODO: not sure about the `-8` part
+    info->fp = info->sp;
 
     // the trampoline will change from el1 to el0
     info->lr = _user_thread_trampoline;  // link register -> hold the return address

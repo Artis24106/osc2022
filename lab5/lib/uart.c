@@ -160,13 +160,23 @@ void uart_disable_int(uint32_t type) {
     mmio_write(AUX_MU_IER_REG, t & ~(type));
 }
 
+void enable_uart() {
+    uint32_t mu_ier = mmio_read(AUX_MU_IER_REG);
+    mmio_write(AUX_MU_IER_REG, mu_ier | 0b11111111);
+}
+
+void disable_uart() {
+    uint32_t mu_ier = mmio_read(AUX_MU_IER_REG);
+    mmio_write(AUX_MU_IER_REG, mu_ier / 0b100000000);
+}
+
 void uart_int_handler() {
     if (mmio_read(AUX_MU_IIR_REG) & (0b01 << 1)) {  // Transmit holding register empty -> tx can write
         uart_disable_int(TX);                       // [ Lab3 - AD2 ] 1. masks the device’s interrupt line
-        add_task(uart_write_callback, PRIORITY_NORMAL);
+        add_task(uart_write_callback, PRIORITY_UART_WRITE);
     } else if (mmio_read(AUX_MU_IIR_REG) & (0b10 << 1)) {  // Receiver holds valid byte -> rx can read
         uart_disable_int(RX);                              // [ Lab3 - AD2 ] 1. masks the device’s interrupt line
-        add_task(uart_read_callback, PRIORITY_NORMAL);
+        add_task(uart_read_callback, PRIORITY_UART_READ);
     }
     // else {
     //     uart_write_string("[+] uart_int_handler() Error" ENDL);

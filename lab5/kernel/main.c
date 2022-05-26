@@ -13,8 +13,6 @@ void foo() {
         printf("Thread id: 0x%X 0x%X" ENDL, get_current(), i);
         // enable_intr();
         // update_timer();
-        while (1)
-            ;
         delay(1000000);
         schedule();
     }

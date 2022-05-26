@@ -26,6 +26,7 @@ void run_task() {
         void* bk = t_event;
         list_del(&t_event->node);
         kfree(bk);
+        break;
 
         // TODO: maybe handle the next task?
     }
@@ -54,6 +55,12 @@ void show_task_list() {
         switch (curr->priority) {
             case PRIORITY_NORMAL:
                 printf(" normal ->");
+                break;
+            case PRIORITY_UART_READ:
+                printf(" read ->");
+                break;
+            case PRIORITY_UART_WRITE:
+                printf(" write ->");
                 break;
             case PRIORITY_TIMER:
                 printf(" timer ->");
