@@ -19,6 +19,7 @@ void sys_kill(int32_t pid);
 #define SYS_NUM 8
 
 extern void (*sys_tbl[SYS_NUM])(void*);
+extern uint64_t current_pid;
 
 void sys_handler(trap_frame_t* tf);
 

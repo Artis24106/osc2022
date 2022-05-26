@@ -3,12 +3,15 @@
 #include "mmio.h"
 // #include <stdint.h>
 
-char tx_buf[MAX_BUF_SIZE] = {0},
-     rx_buf[MAX_BUF_SIZE] = {0};
+char tx_buf[MAX_BUF_SIZE] = {0},  // buffer for async write
+    rx_buf[MAX_BUF_SIZE] = {0};   // buffer for async read
+rtx_buf[MAX_BUF_SIZE] = {0};      // buffer for read/write
 uint32_t tx_buf_head = 0,
          tx_buf_tail = 0,
          rx_buf_head = 0,
-         rx_buf_tail = 0;
+         rx_buf_tail = 0,
+         rtx_buf_head = 0,
+         rtx_buf_tail = 0;
 
 void uart_init() {
     uint32_t t;
@@ -172,10 +175,12 @@ void disable_uart() {
 
 void uart_int_handler() {
     if (mmio_read(AUX_MU_IIR_REG) & (0b01 << 1)) {  // Transmit holding register empty -> tx can write
-        uart_disable_int(TX);                       // [ Lab3 - AD2 ] 1. masks the device’s interrupt line
+        printf("uart write" ENDL);
+        uart_disable_int(TX);  // [ Lab3 - AD2 ] 1. masks the device’s interrupt line
         add_task(uart_write_callback, PRIORITY_UART_WRITE);
     } else if (mmio_read(AUX_MU_IIR_REG) & (0b10 << 1)) {  // Receiver holds valid byte -> rx can read
-        uart_disable_int(RX);                              // [ Lab3 - AD2 ] 1. masks the device’s interrupt line
+        printf("uart read" ENDL);
+        uart_disable_int(RX);  // [ Lab3 - AD2 ] 1. masks the device’s interrupt line
         add_task(uart_read_callback, PRIORITY_UART_READ);
     }
     // else {
@@ -187,25 +192,24 @@ void uart_int_handler() {
 }
 
 void uart_write_callback() {
-    if (tx_buf_head == tx_buf_tail) {  // tx_buf is empty
+    if (rtx_buf_head == rtx_buf_tail) {  // tx_buf is empty
         uart_disable_int(TX);
         return;
     }
-    uart_write(tx_buf[tx_buf_head++]);
-    tx_buf_head %= MAX_BUF_SIZE;
+    uart_write(rtx_buf[rtx_buf_head++]);
+    rtx_buf_head %= MAX_BUF_SIZE;
 
     // [ Lab3 - AD2 ] 5. unmasks the interrupt line to get the next interrupt at the end of the task.
     uart_enable_int(TX);
 }
 
 void uart_read_callback() {
-    if ((rx_buf_tail + 1) % MAX_BUF_SIZE == rx_buf_head) {  // rx_buf is full
+    if ((rtx_buf_tail + 1) % MAX_BUF_SIZE == rtx_buf_head) {  // rx_buf is full
         uart_disable_int(RX);
         return;
     }
-    uart_read(&(rx_buf[rx_buf_tail++]), 1);  // transfer pointer!!
-    // for (uint32_t i=)
-    rx_buf_tail %= MAX_BUF_SIZE;
+    uart_read(&(rtx_buf[rtx_buf_tail++]), 1);  // transfer pointer!!
+    rtx_buf_tail %= MAX_BUF_SIZE;
 
     // [ Lab3 - AD2 ] 5. unmasks the interrupt line to get the next interrupt at the end of the task.
     uart_enable_int(RX);

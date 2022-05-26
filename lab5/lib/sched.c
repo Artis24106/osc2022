@@ -10,7 +10,7 @@ uint32_t rq_len = 0,
          wq_len = 0,
          dq_len = 0;
 
-uint64_t current_pid = 1;  // TODO: why this is needed
+uint64_t current_pid = 1;
 
 void idle() {
     printf("idle()" ENDL);
@@ -227,7 +227,7 @@ uint32_t _fork(trap_frame_t* tf) {
     info->lr = _fork_child_trampoline;  // this is for child
 
     // store some info for _fork_child_trampoline
-    info->x19 = tf->x30;               // TODO: what's that, elr_el1?
+    info->x19 = tf->x30;               // elr_el1
     info->x20 = tf->sp_el0 + usp_off;  // store new sp_el0 in x20
 
     // disable_intr();

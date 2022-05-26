@@ -22,7 +22,7 @@ void _exec(char* file_data, uint32_t data_size, trap_frame_t* tf) {
     // char* file_ptr = frame_alloc(data_size / 0x1000);  // memcpy, so the address will align 0x1000
     char* file_ptr = kmalloc(data_size);
     memcpy(file_ptr, file_data, data_size);
-    tf->x30 = file_ptr;
+    tf->x30 = file_ptr;  // x30 will be used in fork
     tf->sp_el0 = ustack + THREAD_STACK_SIZE - 8;
     el1_to_el0(file_ptr, ustack);
 }
