@@ -161,7 +161,7 @@ void* cpio_get_file(char* file_name) {
         data_size = hex_ascii_to_uint32(header->c_filesize, sizeof(header->c_filesize) / sizeof(char));
 
         // parse data
-        memcpy(curr_file_name, cpio_ptr, name_size);
+        curr_file_name = cpio_ptr;
         while ((name_size + header_size) % 4 != 0) name_size += 1;  // add `header_size` is to balance the offset
         cpio_ptr += name_size;
 

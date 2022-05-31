@@ -175,11 +175,11 @@ void disable_uart() {
 
 void uart_int_handler() {
     if (mmio_read(AUX_MU_IIR_REG) & (0b01 << 1)) {  // Transmit holding register empty -> tx can write
-        printf("uart write" ENDL);
+        // printf("uart write" ENDL);
         uart_disable_int(TX);  // [ Lab3 - AD2 ] 1. masks the device’s interrupt line
         add_task(uart_write_callback, PRIORITY_UART_WRITE);
     } else if (mmio_read(AUX_MU_IIR_REG) & (0b10 << 1)) {  // Receiver holds valid byte -> rx can read
-        printf("uart read" ENDL);
+        // printf("uart read" ENDL);
         uart_disable_int(RX);  // [ Lab3 - AD2 ] 1. masks the device’s interrupt line
         add_task(uart_read_callback, PRIORITY_UART_READ);
     }

@@ -39,8 +39,12 @@ uint32_t get_be_uint32(void *ptr) {
 }
 
 char *memcpy(void *dest, const void *src, uint64_t len) {
+    uint32_t daif = get_intr();
+    disable_intr();
     char *d = dest;
-    while (len--) *d++ = *(char *)src++;
+    char *s = src;
+    while (len--) *d++ = *s++;
+    set_intr(daif);
     return dest;
 }
 

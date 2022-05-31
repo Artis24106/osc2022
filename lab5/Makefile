@@ -5,7 +5,7 @@ include config.mk
 all: 
 	make -C lib
 	make -C kernel
-	make -C bootloader
+	# make -C bootloader
 	$(call log,Compile successfully!!\n)
 
 run:

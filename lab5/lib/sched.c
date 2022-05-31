@@ -55,7 +55,7 @@ void schedule() {
     task_struct_t* curr = current;
     // printf("curr: 0x%X (0x%X)" ENDL, &curr->node, curr);
     // show_q();
-    for (uint32_t i = 0; i < 0x1000; i++) asm("nop");
+    // for (uint32_t i = 0; i < 0x1000; i++) asm("nop");
     switch_to(current, &next->info);
 }
 

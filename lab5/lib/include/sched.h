@@ -5,6 +5,7 @@
 #include "list.h"
 #include "lock.h"
 #include "malloc.h"
+#include "signal.h"
 #include "string.h"
 
 #define THREAD_STACK_SIZE 0x2000  // TODO: why

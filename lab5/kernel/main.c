@@ -49,9 +49,9 @@ void kernel_main(char* x0) {
     timer_list_init();
     task_list_init();
 
-    // enable interrupts (AUX, uart RX/TX)
-    uart_enable_int(RX | TX);
-    uart_enable_aux_int();
+    // // enable interrupts (AUX, uart RX/TX)
+    // uart_enable_int(RX | TX);
+    // uart_enable_aux_int();
 
     // TODO: what's that??
     uint64_t tmp;
@@ -77,6 +77,10 @@ void kernel_main(char* x0) {
     printf("[+] syscall.img base: 0x%X" ENDL, file_ptr);
     printf("create_user_task" ENDL);
     create_user_task(file_ptr, 0);
+
+    // enable interrupts (AUX, uart RX/TX)
+    uart_enable_int(RX | TX);
+    uart_enable_aux_int();
 
     update_timer();
     enable_intr();

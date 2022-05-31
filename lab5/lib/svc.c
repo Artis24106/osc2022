@@ -38,13 +38,19 @@ int64_t sys_uartwrite(const char buf[], int64_t size) {
 int32_t sys_exec(trap_frame_t* tf, const char* name, char* const argv[]) {
     // printf("[DEBUG] sys_exec(%s)" ENDL, name);
     void* file_ptr = cpio_get_file(name);
+    if (file_ptr == NULL) {
+        printf("[-] %s not found??" ENDL, name);
+        while (1)
+            ;
+    }
     current->pid = current_pid++;
     tf->x30 = file_ptr;  // x30 is stored for fork
-    uint64_t off = tf->sp_el0 % 0x10000;
-    tf->sp_el0 = kmalloc(THREAD_STACK_SIZE);
-    tf->sp_el0 += off;
-    // tf->sp_el0 = current->user_stack;
-    // tf->sp_el0 += THREAD_STACK_SIZE;
+    // uint64_t off = tf->sp_el0 % 0x10000;
+    // tf->sp_el0 = kmalloc(THREAD_STACK_SIZE);
+    // tf->sp_el0 += off;
+
+    tf->sp_el0 = current->user_stack;
+    tf->sp_el0 += THREAD_STACK_SIZE;
     // printf("SP 0x%X, 0x%X" ENDL, tf->sp_el0, current->user_stack);
 
     return 0;
@@ -89,6 +95,14 @@ void sys_kill(int32_t pid) {
     }
 }
 
+void sys_signal(int32_t signal, void (*handler)()) {
+    printf("signal = %d, handler = 0x%X" ENDL, signal, handler);
+}
+
+void sys_sigkill(int32_t pid, int signal) {
+    printf("sigkill(%d, %d)" ENDL, pid, signal);
+}
+
 void svc_handler(trap_frame_t* tf) {  // handle svc0
     // printf("svc_handler()" ENDL);
 
@@ -122,13 +136,13 @@ void svc_handler(trap_frame_t* tf) {  // handle svc0
         case 1:
             // printf("0x%X (0x%X), 0x%X" ENDL, tf->x0, *(char*)tf->x0, tf->x1);
             sys_uartread(tf->x0, tf->x1);
-            printf(" \b");
+            // printf(" \b");
             // printf("read 0x%X (0x%X), 0x%X" ENDL, tf->x0, *(char*)tf->x0, tf->x1);
             // for (uint32_t i = 0; i < 0x100000; i++) asm("nop");
             break;
         case 2:
             sys_uartwrite(tf->x0, tf->x1);
-            printf(" \b");
+            // printf(" \b");
             // printf("write 0x%X (0x%X), 0x%X" ENDL, tf->x0, *(char*)tf->x0, tf->x1);
             break;
         case 3:
@@ -146,6 +160,12 @@ void svc_handler(trap_frame_t* tf) {  // handle svc0
             break;
         case 7:
             sys_kill(tf->x0);
+            break;
+        case 8:  // signal(int SIGNAL, void (*handler)())
+            sys_signal(tf->x0, tf->x1);
+            break;
+        case 9:  // kill(int pid, int SIGNAL)
+            sys_sigkill(tf->x0, tf->x1);
             break;
         default:
             break;
