@@ -45,13 +45,13 @@ int32_t sys_exec(trap_frame_t* tf, const char* name, char* const argv[]) {
     }
     current->pid = current_pid++;
     tf->x30 = file_ptr;  // x30 is stored for fork
-    // uint64_t off = tf->sp_el0 % 0x10000;
-    // tf->sp_el0 = kmalloc(THREAD_STACK_SIZE);
-    // tf->sp_el0 += off;
 
     tf->sp_el0 = current->user_stack;
     tf->sp_el0 += THREAD_STACK_SIZE;
-    // printf("SP 0x%X, 0x%X" ENDL, tf->sp_el0, current->user_stack);
+
+    // reset sighand
+    reset_signal(current->signal);
+    reset_sighand(current->sighand);
 
     return 0;
 }
@@ -69,38 +69,58 @@ void sys_exit(int32_t status) {
 }
 
 int32_t sys_mbox_call(uint8_t ch, mail_t* mbox) {
-    // printf("[DEBUG] sys_mbox_call(%d, 0x%X)" ENDL, ch, *mbox);
-    // while (1) {
-    // printf("mbox!!!" ENDL);
-    // }
-
     return mbox_call(mbox, ch);
 }
 
 void sys_kill(int32_t pid) {
     // printf("[DEBUG] sys_kill(%d)" ENDL, pid);
+    task_struct_t* target = get_task_by_pid(pid);
+    if (!target) return;
 
-    task_struct_t *curr, *temp;
-
-    // run queue
-    list_for_each_entry_safe(curr, temp, &rq, node) {
-        if (curr->pid != pid) continue;
-        thread_release(curr, EX_KILLED);
-    }
-
-    // wait queue
-    list_for_each_entry_safe(curr, temp, &wq, node) {
-        if (curr->pid != pid) continue;
-        thread_release(curr, EX_KILLED);
-    }
+    thread_release(target, EX_KILLED);
 }
 
 void sys_signal(int32_t signal, void (*handler)()) {
-    printf("signal = %d, handler = 0x%X" ENDL, signal, handler);
+    printf("signal -> %s(%d), handler = 0x%X" ENDL, signal_to_str(signal), signal, handler);
+
+    if (signal >= SIGRTMAX) {
+        printf("[-] Invalid Signal" ENDL);
+        return;
+    }
+
+    printf("curr pid = %d" ENDL, current->pid);
+    sigaction_t* sigaction = &current->sighand->sigactions[signal];
+
+    sigaction->is_kernel_hand = true;
+    switch ((uint64_t)handler) {
+        case SIGDFL:
+            sigaction->sa_handler = sig_terminate;
+            break;
+        case SIGIGN:
+            sigaction->sa_handler = sig_ignore;
+            break;
+        default:  // user signal handler
+            sigaction->is_kernel_hand = false;
+            sigaction->sa_handler = handler;
+            break;
+    }
 }
 
 void sys_sigkill(int32_t pid, int signal) {
-    printf("sigkill(%d, %d)" ENDL, pid, signal);
+    // printf("sigkill(%d, %d)" ENDL, pid, signal);
+
+    // find the task
+    task_struct_t* target = get_task_by_pid(pid);
+    if (!target) return;  // TODO: should "not running" task be killed?
+
+    // assign `signal` to the task
+    signal_t* new_sig = kmalloc(sizeof(signal_t));
+    new_sig->signum = signal;
+    list_add_tail(new_sig, &target->signal->node);
+}
+
+void sys_sigreturn(trap_frame_t* tf) {
+    memcpy(tf, tf->sp_el0, sizeof(trap_frame_t));
 }
 
 void svc_handler(trap_frame_t* tf) {  // handle svc0
@@ -121,10 +141,10 @@ void svc_handler(trap_frame_t* tf) {  // handle svc0
         @ret: x0
         @sys_num: x8
     */
-    // ddd();
     uint64_t sys_num = tf->x8;
     // printf("sys_num = %d" ENDL, sys_num);
     if (sys_num >= SYS_NUM) {
+        printf("[-] Invalid syscall number" ENDL);
         invalid_handler(8);
     }
 
@@ -167,6 +187,8 @@ void svc_handler(trap_frame_t* tf) {  // handle svc0
         case 9:  // kill(int pid, int SIGNAL)
             sys_sigkill(tf->x0, tf->x1);
             break;
+        case 10:
+            sys_sigreturn(tf);
         default:
             break;
     }

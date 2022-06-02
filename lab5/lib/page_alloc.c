@@ -64,7 +64,6 @@ void frame_init() {
     }
     printf("QQQ: 0x%X" ENDL, frame_list[FRAME_SIZE - 1]);
     // frame_list[0].val = MAX_ORDER;
-    // ddd();
 
     // handle reserved memory
     // 1. reserve frames
@@ -77,7 +76,6 @@ void frame_init() {
     memory_reserve(0x180000, 0x260000);
     // memory_reserve(0x0, 0x2C000000);
 
-    // ddd();
     // 2. merge the unused frames
     bool modified = false;
     uint32_t first_fpn = 0,

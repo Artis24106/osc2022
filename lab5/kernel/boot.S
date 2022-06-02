@@ -214,10 +214,12 @@ _lower_el_aarch64_irq:
 
     save_all
     bl      irq_handler
+
+    # exit to user mode 
     bl      try_schedule
-    
-    mov     x0, sp
-    # bl try_signal_handler
+    mov     x0, sp // sp -> trap frame
+    bl      try_signal_handler
+
     load_all
 
     # msr DAIFClr, 0xf // enable interrupt

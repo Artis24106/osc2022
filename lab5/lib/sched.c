@@ -71,6 +71,35 @@ void try_schedule() {  // schedule callback for timer
     update_timer();
 }
 
+void try_signal_handler(trap_frame_t* tf) {
+    task_struct_t* curr = current;
+
+    // try getting the first signal
+    signal_t* signal = list_first_entry_or_null(&curr->signal->node, signal_t, node);
+    if (!signal) return;
+
+    sigaction_t* sigaction = &curr->sighand->sigactions[signal->signum];
+    printf("try_signal_handler -> 0x%X" ENDL, sigaction->sa_handler);
+    if (sigaction->is_kernel_hand) {
+        printf("is_kernel_hand" ENDL);
+        sigaction->sa_handler(signal->signum);
+    } else {
+        printf("not is_kernel_hand" ENDL);
+        void* user_sp = tf->sp_el0 - align(sizeof(trap_frame_t), 0x10);
+        memcpy(user_sp, tf, sizeof(trap_frame_t));
+
+        tf->sp_el0 = user_sp;  // save user sp, which will be restored when `sys_sigreturn`
+
+        tf->x0 = signal->signum;              // set pararmeter
+        tf->elr_el1 = sigaction->sa_handler;  // user pc will return to handler
+
+        tf->x30 = sigreturn;  // set lr to sigreturn
+        ddd();
+    }
+    list_del(&signal->node);
+    kfree(signal);
+}
+
 void main_thread_init() {
     printf("main_thread_init()" ENDL);
     main_task = new_task();
@@ -118,7 +147,7 @@ void thread_release(task_struct_t* target, int16_t ec) {
     if (target == current) {
         // update_timer();
         set_intr(daif);
-        printf("dis switch_to" ENDL);
+        // printf("dis switch_to" ENDL);
         switch_to(target, next);
     } else {
         set_intr(daif);
@@ -134,6 +163,25 @@ task_struct_t* next_task(task_struct_t* curr) {
         // however, should never choose the main task or the current task
     } while (&next->node == &rq || next == current);
     return next;
+}
+
+task_struct_t* get_task_by_pid(uint32_t pid) {
+    task_struct_t* curr;
+
+    // run queue
+    list_for_each_entry(curr, &rq, node) {
+        if (curr->pid != pid) continue;
+        goto get_task_by_pid_end;
+    }
+
+    // wait queue
+    list_for_each_entry(curr, &wq, node) {
+        if (curr->pid != pid) continue;
+        goto get_task_by_pid_end;
+    }
+
+get_task_by_pid_end:
+    return curr;
 }
 
 uint32_t create_kern_task(void (*func)(), void* arg) {
@@ -230,8 +278,13 @@ uint32_t _fork(trap_frame_t* tf) {
     info->x19 = tf->x30;               // elr_el1
     info->x20 = tf->sp_el0 + usp_off;  // store new sp_el0 in x20
 
-    // disable_intr();
-    //TODO: signal handling
+    // copy signal handler
+    for (uint32_t i = 1; i < SIGRTMAX; i++) {
+        task->sighand->sigactions[i].is_kernel_hand = curr_task->sighand->sigactions[i].is_kernel_hand;
+        task->sighand->sigactions[i].sa_handler = curr_task->sighand->sigactions[i].sa_handler;
+    }
+
+    // add to run queue
     list_add_tail(&task->node, &rq);
     rq_len += 1;
     // enable_intr();
@@ -246,6 +299,8 @@ task_struct_t* new_task() {
     memset(task, 0, sizeof(task_struct_t));
     task->time = 1;
     INIT_LIST_HEAD(&task->node);
+    task->signal = new_signal();
+    task->sighand = new_sighand();
     return task;
 }
 
@@ -267,7 +322,6 @@ void show_q() {
         printf("0x%X -> ", &curr->node);
         cnt += 1;
         if (cnt > rq_len) {
-            // ddd();
             // return;
             break;
         }

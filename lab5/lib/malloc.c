@@ -72,7 +72,6 @@ void* slab_alloc(uint64_t size) {
             if (list_empty(&curr->free_cache)) continue;
             // get the first slab cache
             ret = curr->free_cache.next;
-            // ddd();
             list_del(ret);
             // printf("GOOD ret: 0x%X" ENDL, ret);
             return ret;

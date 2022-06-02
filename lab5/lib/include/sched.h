@@ -88,9 +88,9 @@ typedef struct task_struct {
     uint32_t time;
     uint64_t user_stack;
     uint64_t kernel_stack;
-    // signal
-    // signal_ctx
-    // signal_queue
+
+    signal_t* signal;    // signal linked list
+    sighand_t* sighand;  // signal handler
 } task_struct_t;
 
 // run queue, wait queue, dead queue
@@ -104,10 +104,12 @@ void idle();
 void kill_zombies();
 void schedule();
 void try_schedule();
+void try_signal_handler(trap_frame_t* tf);
 void main_thread_init();
 void thread_create(void* start);
 void thread_release(task_struct_t* target, int16_t ec);
 task_struct_t* next_task(task_struct_t* curr);
+task_struct_t* get_task_by_pid(uint32_t pid);
 
 uint32_t create_kern_task(void (*func)(), void* arg);
 uint32_t create_user_task(void (*func)(), void* arg);
