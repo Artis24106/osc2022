@@ -2,6 +2,8 @@
 
 #include "cpio.h"
 #include "dtb.h"
+#include "fs/fs.h"
+#include "fs/vfs.h"
 #include "page_alloc.h"
 #include "printf.h"
 #include "sched.h"
@@ -49,6 +51,9 @@ void kernel_main(char* x0) {
     timer_list_init();
     task_list_init();
 
+    fs_init();
+    while (1)
+        ;
     // // enable interrupts (AUX, uart RX/TX)
     // uart_enable_int(RX | TX);
     // uart_enable_aux_int();
