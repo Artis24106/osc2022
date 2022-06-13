@@ -94,7 +94,6 @@ void try_signal_handler(trap_frame_t* tf) {
         tf->elr_el1 = sigaction->sa_handler;  // user pc will return to handler
 
         tf->x30 = sigreturn;  // set lr to sigreturn
-        ddd();
     }
     list_del(&signal->node);
     kfree(signal);
@@ -299,8 +298,15 @@ task_struct_t* new_task() {
     memset(task, 0, sizeof(task_struct_t));
     task->time = 1;
     INIT_LIST_HEAD(&task->node);
+
+    // signal
     task->signal = new_signal();
     task->sighand = new_sighand();
+
+    // file
+    task->max_fd = 2;
+    task->work_dir = rootfs->root;
+
     return task;
 }
 

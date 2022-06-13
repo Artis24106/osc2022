@@ -1,63 +1,14 @@
 #ifndef __VFS_H__
 #define __VFS_H__
 
+#include "fs/vfs_type.h"
 #include "list.h"
 #include "malloc.h"
 #include "printf.h"
 
-/* whence values for lseek */
-#define SEEK_SET 0x0  // the offset is set to `offset` bytes
-#define SEEK_CUR 0x1  // the offset is set to its current location plus `offset` bytes
-#define SEEK_END 0x2  // the offset is set to the size of the file plus offset bytes
+vnode_t* vfs_get_dir_node_by_name(vnode_t* dir_node, char** path_name);
 
-typedef struct vnode {  // represent a disk file
-    struct mount* mount;
-    struct vnode_operations* v_ops;
-    struct file_operations* f_ops;
-    void* internal;
-    struct vnode* parent;  // point to the partne vnode
-} vnode_t;
-
-// file handle
-// https://www.oreilly.com/library/view/linux-device-drivers/0596000081/ch03s04.html
-typedef struct file {  // represent an open file
-    struct vnode* vnode;
-    size_t f_pos;  // RW position of this file handle (current R/W position)
-    struct file_operations* f_ops;
-    int f_flags;
-} file_t;
-
-// http://books.gigatux.nl/mirror/kerneldevelopment/0672327201/ch12lev1sec6.html
-typedef struct mount {
-    struct vnode* root;
-    struct filesystem* fs;
-} mount_t;
-
-typedef struct filesystem {
-    list_head_t* node;
-    const char* name;
-    int (*setup_mount)(struct filesystem* fs, struct mount* mount);
-    int (*alloc_root)(struct filesystem* fs, struct vnode** root);
-} filesystem_t;
-
-typedef struct file_operations {
-    int (*write)(struct file* file, const void* buf, size_t len);
-    int (*read)(struct file* file, void* buf, size_t len);
-    int (*open)(struct vnode* file_node, struct file* target);
-    int (*close)(struct file* file);
-    long (*lseek64)(struct file* file, long offset, int whence);
-} file_operations_t;
-
-typedef struct vnode_operations {
-    int (*lookup)(struct vnode* dir_node, struct vnode** target,
-                  const char* component_name);
-    int (*create)(struct vnode* dir_node, struct vnode** target,
-                  const char* component_name);
-    int (*mkdir)(struct vnode* dir_node, struct vnode** target,
-                 const char* component_name);
-    int (*get_size)(vnode_t* dir_node);
-    int (*get_name)(vnode_t* dir_node, char* buf);
-} vnode_operations_t;
+filesystem_t* vfs_get_filesystem_by_name(const char* fs_name);
 
 #define gen_ops(ops_type, ops_name) \
     static ops_type ops_name
@@ -80,11 +31,17 @@ typedef struct vnode_operations {
         gen_ops_param(fs_name, create),              \
         gen_ops_param(fs_name, mkdir),               \
         gen_ops_param(fs_name, get_size),            \
+        gen_ops_param(fs_name, is_dir),              \
+        gen_ops_param(fs_name, is_file),             \
     }
 
 #define declare_ops(fs_name) \
     gen_f_vops(fs_name);     \
     gen_v_vops(fs_name);
+
+/* filesystem init */
+#define _vfs_init(fs_name) \
+    filesystem_t* fs_name##_init()
 
 /* filesystem operations */
 #define _vfs_setup_mount(fs_name) \
@@ -116,6 +73,10 @@ typedef struct vnode_operations {
     int fs_name##_get_size(vnode_t* dir_node)
 #define _vfs_get_name(fs_name) \
     int fs_name##_get_name(vnode_t* dir_node, char* buf)
+#define _vfs_is_dir(fs_name) \
+    bool fs_name##_is_dir(vnode_t* node)
+#define _vfs_is_file(fs_name) \
+    bool fs_name##_is_file(vnode_t* node)
 
 void vfs_init();
 void rootfs_init(filesystem_t* fs);

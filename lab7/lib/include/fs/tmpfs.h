@@ -4,16 +4,16 @@
 #include "fs/vfs.h"
 #include "malloc.h"
 #include "printf.h"
-#include "string.h"
+// #include "string.h"
 
 #define COMP_MAXLEN 0x10      // Component name won't exceed 15 characters
 #define DIR_MAX_ENTRIES 0x10  // max entries in dir
 #define FILE_MAX_CAPACITY 0x1000
 
 typedef enum TMPFS_TYPE {
-    UNDEFINED,
-    DIR,
-    FILE
+    TMPFS_TYPE_UNDEFINED,
+    TMPFS_TYPE_DIR,
+    TMPFS_TYPE_FILE
 } TMPFS_TYPE_T;
 
 typedef struct tmpfs_dir {
@@ -30,14 +30,15 @@ typedef struct tmpfs_file {
 typedef struct tmpfs_internal {
     char name[COMP_MAXLEN];
     TMPFS_TYPE_T type;
-    union _data {
+    union tmpfs_data {
         tmpfs_dir_t* dir;
         tmpfs_file_t* file;
     } data;
     vnode_t* old_node;  // TOOD: ??
 } tmpfs_internal_t;
 
-filesystem_t* tmpfs_init();
+/* filesystem init */
+_vfs_init(tmpfs);
 
 /* filesystem operations */
 _vfs_setup_mount(tmpfs);
@@ -55,6 +56,8 @@ _vfs_lookup(tmpfs);
 _vfs_create(tmpfs);
 _vfs_mkdir(tmpfs);
 _vfs_get_size(tmpfs);
-_vfs_get_name(fs_name);
+_vfs_get_name(tmpfs);
+_vfs_is_dir(tmpfs);
+_vfs_is_file(tmpfs);
 
 #endif

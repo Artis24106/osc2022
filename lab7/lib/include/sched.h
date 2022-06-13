@@ -2,6 +2,7 @@
 #define __SCHED_H__
 
 #include "exec.h"
+#include "fs/vfs_type.h"
 #include "list.h"
 #include "lock.h"
 #include "malloc.h"
@@ -14,6 +15,10 @@
 #define EX_OK 0
 #define EX_KILLED 1
 #define EX_SIG_BASE 128
+
+#define MAX_FD 0x10
+
+extern mount_t* rootfs;
 
 typedef struct thread_info {
     uint64_t x19;  // callee saved register
@@ -89,8 +94,14 @@ typedef struct task_struct {
     uint64_t user_stack;
     uint64_t kernel_stack;
 
+    /* signal */
     signal_t* signal;    // signal linked list
     sighand_t* sighand;  // signal handler
+
+    /* file */
+    int max_fd;
+    file_t fds[MAX_FD];
+    vnode_t* work_dir;
 } task_struct_t;
 
 // run queue, wait queue, dead queue

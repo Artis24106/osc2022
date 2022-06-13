@@ -52,8 +52,8 @@ void kernel_main(char* x0) {
     task_list_init();
 
     fs_init();
-    while (1)
-        ;
+    // while (1)
+    //     ;
     // // enable interrupts (AUX, uart RX/TX)
     // uart_enable_int(RX | TX);
     // uart_enable_aux_int();
@@ -73,7 +73,7 @@ void kernel_main(char* x0) {
     //     create_kern_task(foo, NULL);
     // }
 
-    void* file_ptr = cpio_get_file("syscall.img");
+    void* file_ptr = cpio_get_file("./vfs1.img");
     if (file_ptr == NULL) {
         printf("[-] syscall.img not found??" ENDL);
         while (1)

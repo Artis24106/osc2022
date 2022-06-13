@@ -1,3 +1,4 @@
 gef-remote host.docker.internal:1234
-b ddd
+dir lib/
+b vfs_open
 c

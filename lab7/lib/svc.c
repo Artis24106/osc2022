@@ -144,7 +144,7 @@ void svc_handler(trap_frame_t* tf) {  // handle svc0
     uint64_t sys_num = tf->x8;
     // printf("sys_num = %d" ENDL, sys_num);
     if (sys_num >= SYS_NUM) {
-        printf("[-] Invalid syscall number" ENDL);
+        printf("[-] Invalid syscall number %d" ENDL, sys_num);
         invalid_handler(8);
     }
 

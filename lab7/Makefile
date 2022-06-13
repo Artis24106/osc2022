@@ -27,9 +27,11 @@ debug_bootloader:
 	qemu-system-aarch64 -M raspi3b -kernel bootloader/bootloader.img -display none -serial null -serial pty -initrd initramfs.cpio -dtb bcm2710-rpi-3-b-plus.dtb -s -S
 
 docker_cp:
-	docker cp kernel/kernel.elf my_kali:/
+	docker cp kernel/kernel.elf my_kali:/osdi/
 	# docker cp bootloader/bootloader.elf my_kali:/
-	docker cp gdb_script my_kali:/
+	docker cp gdb_script my_kali:/osdi/
+	docker cp kernel/ my_kali:/osdi/
+	docker cp lib/ my_kali:/osdi/
 
 cpio:
 	cd rootfs && find . | cpio -o -H newc > ../initramfs.cpio

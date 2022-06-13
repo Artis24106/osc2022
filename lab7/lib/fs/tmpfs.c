@@ -9,9 +9,11 @@ static filesystem_t tmpfs = {
 /* declare tmpfs_f_ops, tmpfs_v_ops */
 declare_ops(tmpfs);
 
-filesystem_t* tmpfs_init() {
+/* filesystem init */
+_vfs_init(tmpfs) {
     return &tmpfs;
 }
+
 /* filesystem operations */
 _vfs_setup_mount(tmpfs) {
     vnode_t* curr_node = mount->root;
@@ -31,7 +33,7 @@ _vfs_setup_mount(tmpfs) {
 
     tmpfs_internal_t* tmp_int = kmalloc(sizeof(tmpfs_internal_t));
     strcpy(tmp_int->name, name);
-    tmp_int->type = DIR;
+    tmp_int->type = TMPFS_TYPE_DIR;
     tmp_int->data.dir = tmp_d;
     tmp_int->old_node = node_bk;
 
@@ -50,7 +52,7 @@ _vfs_alloc_root(tmpfs) {
 
     tmpfs_internal_t* tmp_int = kmalloc(sizeof(tmpfs_internal_t));
     *tmp_int->name = '\0';
-    tmp_int->type = DIR;
+    tmp_int->type = TMPFS_TYPE_DIR;
     tmp_int->data.dir = tmp_d;
     tmp_int->old_node = NULL;
 
@@ -68,8 +70,8 @@ _vfs_alloc_root(tmpfs) {
 _vfs_write(tmpfs) {
     tmpfs_internal_t* tmp_int = file->vnode->internal;
 
-    // can only write FILE
-    if (tmp_int->type != FILE) return -1;
+    // can only write TMPFS_TYPE_FILE
+    if (tmp_int->type != TMPFS_TYPE_FILE) return -1;
 
     tmpfs_file_t* tmp_f = tmp_int->data.file;
 
@@ -91,8 +93,8 @@ _vfs_write(tmpfs) {
 _vfs_read(tmpfs) {
     tmpfs_internal_t* tmp_int = file->vnode->internal;
 
-    // can only read FILE
-    if (tmp_int->type != FILE) return -1;
+    // can only read TMPFS_TYPE_FILE
+    if (tmp_int->type != TMPFS_TYPE_FILE) return -1;
 
     tmpfs_file_t* tmp_f = tmp_int->data.file;
 
@@ -101,7 +103,11 @@ _vfs_read(tmpfs) {
         len = tmp_f->size - file->f_pos;
     }
 
-    return memcpy(buf, tmp_f->data + file->f_pos, len);
+    memcpy(buf, tmp_f->data + file->f_pos, len);
+
+    file->f_pos += len;
+
+    return len;
 }
 
 _vfs_open(tmpfs) {
@@ -156,8 +162,8 @@ _vfs_lseek64(tmpfs) {
 _vfs_lookup(tmpfs) {
     tmpfs_internal_t* tmp_int = dir_node->internal;
 
-    // can only get size from FILE
-    if (tmp_int->type != FILE) return -1;
+    // can only get size from TMPFS_TYPE_FILE
+    if (tmp_int->type != TMPFS_TYPE_FILE) return -1;
 
     tmpfs_dir_t* tmp_d = tmp_int->data.dir;
 
@@ -182,9 +188,9 @@ _vfs_create(tmpfs) {
     // component name won't execeed 15 characters
     if (strlen(component_name) >= COMP_MAXLEN) return -1;
 
-    // should create component at DIR
+    // should create component at TMPFS_TYPE_DIR
     tmpfs_internal_t* tmp_int = dir_node->internal;
-    if (tmp_int->type != DIR) return -1;
+    if (tmp_int->type != TMPFS_TYPE_DIR) return -1;
 
     // can't have more than 0x10 entries
     tmpfs_dir_t* tmp_d = tmp_int->data.dir;
@@ -206,7 +212,7 @@ _vfs_create(tmpfs) {
 
     // generate new tmpfs file internal
     strcpy(tmp_int->name, component_name);
-    tmp_int->type = FILE;
+    tmp_int->type = TMPFS_TYPE_FILE;
     tmp_int->data.file = new_f;
     tmp_int->old_node = NULL;
 
@@ -231,9 +237,9 @@ _vfs_mkdir(tmpfs) {
     // component name won't execeed 15 characters
     if (strlen(component_name) >= COMP_MAXLEN) return -1;
 
-    // should create component at DIR
+    // should create component at TMPFS_TYPE_DIR
     tmpfs_internal_t* tmp_int = dir_node->internal;
-    if (tmp_int->type != DIR) return -1;
+    if (tmp_int->type != TMPFS_TYPE_DIR) return -1;
 
     // can't have more than 0x10 entries
     tmpfs_dir_t* tmp_d = tmp_int->data.dir;
@@ -253,7 +259,7 @@ _vfs_mkdir(tmpfs) {
 
     // generate new tmpfs file internal
     strcpy(tmp_int->name, component_name);
-    tmp_int->type = DIR;
+    tmp_int->type = TMPFS_TYPE_DIR;
     tmp_int->data.file = new_d;
     tmp_int->old_node = NULL;
 
@@ -277,8 +283,8 @@ _vfs_mkdir(tmpfs) {
 _vfs_get_size(tmpfs) {
     tmpfs_internal_t* tmp_int = dir_node->internal;
 
-    // can only get size from FILE
-    if (tmp_int->type != FILE) return -1;
+    // can only get size from TMPFS_TYPE_FILE
+    if (tmp_int->type != TMPFS_TYPE_FILE) return -1;
 
     tmpfs_file_t* tmp_f = tmp_int->data.file;
 
@@ -290,4 +296,14 @@ _vfs_get_name(tmpfs) {
     // strcpy(buf, tmp_int->name);
     buf = tmp_int->name;
     return strlen(buf);
+}
+
+_vfs_is_dir(tmpfs) {
+    tmpfs_internal_t* tmp_int = node->internal;
+    return tmp_int->type == TMPFS_TYPE_DIR;
+}
+
+_vfs_is_file(tmpfs) {
+    tmpfs_internal_t* tmp_int = node->internal;
+    return tmp_int->type == TMPFS_TYPE_FILE;
 }

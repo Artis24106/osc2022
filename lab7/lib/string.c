@@ -8,7 +8,7 @@ int strcmp(const char *a, const char *b) {
 
 int strncmp(const char *a, const char *b, uint32_t size) {
     uint32_t i = 0;
-    while (a[i] == b[i] && i < size) i++;
+    while (a[i] == b[i] && i < size - 1) i++;
     return a[i] - b[i];
 }
 

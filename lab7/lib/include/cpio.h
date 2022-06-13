@@ -27,22 +27,21 @@ typedef struct cpio_newc_header {
     char c_rdevminor[8];
     char c_namesize[8];
     char c_check[8];
-} cpio_newc_header;
+} __attribute((packed)) cpio_newc_header_t;
 
-// Compiler 會對 cpio_newc_parse_header 做 alignmenrt..
+// Compiler 會對 cpio_newc_parse_header 做 alignment..
 #define CPIO_NEWC_HEADER_SIZE (0x70 - 2)
 
 void cpio_init();
 void cpio_newc_parser(void* callback, char* param);
-// void cpio_newc_parser_tf(void* callback, char* param, trap_frame_t* tf);
-void cpio_newc_parse_header(char** cpio_ptr, cpio_newc_header** header);
-void cpio_newc_show_header(cpio_newc_header* header);
+void cpio_newc_parse_header(char** cpio_ptr, cpio_newc_header_t** header);
+void cpio_newc_show_header(cpio_newc_header_t* header);
 void cpio_newc_parse_data(char** cpio_ptr, char** buf, uint32_t size, uint32_t offset);
-void cpio_ls_callback(char* param, cpio_newc_header* header, char* file_name, uint32_t name_size, char* file_data, uint32_t data_size);
-void cpio_cat_callback(char* param, cpio_newc_header* header, char* file_name, uint32_t name_size, char* file_data, uint32_t data_size);
-void cpio_exec_callback(char* param, cpio_newc_header* header, char* file_name, uint32_t name_size, char* file_data, uint32_t data_size);
-// void cpio_exec_callback_tf(char* param, cpio_newc_header* header, char* file_name, char* file_data, uint32_t data_size, trap_frame_t* tf);
-void cpio_exec_sched_callback(char* param, cpio_newc_header* header, char* file_name, uint32_t name_size, char* file_data, uint32_t data_size);
+void cpio_ls_callback(char* param, cpio_newc_header_t* header, char* file_name, uint32_t name_size, char* file_data, uint32_t data_size);
+void cpio_cat_callback(char* param, cpio_newc_header_t* header, char* file_name, uint32_t name_size, char* file_data, uint32_t data_size);
+void cpio_exec_callback(char* param, cpio_newc_header_t* header, char* file_name, uint32_t name_size, char* file_data, uint32_t data_size);
+// void cpio_exec_callback_tf(char* param, cpio_newc_header_t* header, char* file_name, char* file_data, uint32_t data_size, trap_frame_t* tf);
+void cpio_exec_sched_callback(char* param, cpio_newc_header_t* header, char* file_name, uint32_t name_size, char* file_data, uint32_t data_size);
 
 void* cpio_get_file(char* file_name);
 #endif
