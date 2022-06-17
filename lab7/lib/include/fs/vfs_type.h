@@ -8,6 +8,11 @@
 #define SEEK_CUR 0x1  // the offset is set to its current location plus `offset` bytes
 #define SEEK_END 0x2  // the offset is set to the size of the file plus offset bytes
 
+/* open */
+#define O_CREAT 00000100
+
+// https://sites.uclouvain.be/SystInfo/usr/include/asm-generic/fcntl.h.html
+
 typedef struct vnode {  // represent a disk file
     struct mount* mount;
     struct vnode_operations* v_ops;
@@ -54,9 +59,10 @@ typedef struct vnode_operations {
     int (*mkdir)(struct vnode* dir_node, struct vnode** target,
                  const char* component_name);
     int (*get_size)(vnode_t* dir_node);
-    int (*get_name)(vnode_t* dir_node, char* buf);
+    int (*get_name)(vnode_t* dir_node, char** buf);
     bool (*is_dir)(vnode_t* node);
     bool (*is_file)(vnode_t* node);
+    void (*show_vnode)(vnode_t* node, int layer);
 } vnode_operations_t;
 
 #endif

@@ -304,8 +304,9 @@ task_struct_t* new_task() {
     task->sighand = new_sighand();
 
     // file
-    task->max_fd = 2;
+    task->max_fd = MAX_FD;
     task->work_dir = rootfs->root;
+    for (int i = 0; i < MAX_FD; i++) task->fds[i].vnode = NULL;
 
     return task;
 }

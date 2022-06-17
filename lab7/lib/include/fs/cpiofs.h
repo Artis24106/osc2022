@@ -46,6 +46,7 @@ _vfs_read(cpiofs);
 _vfs_open(cpiofs);
 _vfs_close(cpiofs);
 _vfs_lseek64(cpiofs);
+_vfs_show_vnode(cpiofs);
 
 /* vnode operations */
 _vfs_lookup(cpiofs);

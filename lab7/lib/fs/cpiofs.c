@@ -377,3 +377,5 @@ _vfs_is_file(cpiofs) {
     cpiofs_internal_t* tmp_int = node->internal;
     return tmp_int->type == CPIOFS_TYPE_FILE;
 }
+
+_vfs_show_vnode(cpiofs) {}

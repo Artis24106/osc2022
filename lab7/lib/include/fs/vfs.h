@@ -30,9 +30,11 @@ filesystem_t* vfs_get_filesystem_by_name(const char* fs_name);
         gen_ops_param(fs_name, lookup),              \
         gen_ops_param(fs_name, create),              \
         gen_ops_param(fs_name, mkdir),               \
+        gen_ops_param(fs_name, get_name),            \
         gen_ops_param(fs_name, get_size),            \
         gen_ops_param(fs_name, is_dir),              \
         gen_ops_param(fs_name, is_file),             \
+        gen_ops_param(fs_name, show_vnode),          \
     }
 
 #define declare_ops(fs_name) \
@@ -72,11 +74,17 @@ filesystem_t* vfs_get_filesystem_by_name(const char* fs_name);
 #define _vfs_get_size(fs_name) \
     int fs_name##_get_size(vnode_t* dir_node)
 #define _vfs_get_name(fs_name) \
-    int fs_name##_get_name(vnode_t* dir_node, char* buf)
+    int fs_name##_get_name(vnode_t* dir_node, char** buf)
 #define _vfs_is_dir(fs_name) \
     bool fs_name##_is_dir(vnode_t* node)
 #define _vfs_is_file(fs_name) \
     bool fs_name##_is_file(vnode_t* node)
+#define _vfs_show_vnode(fs_name) \
+    void fs_name##_show_vnode(vnode_t* node, int layer)
+
+#define pad(layer)  \
+    printf("[-] "); \
+    for (int lcount = 0; lcount < layer * 2; lcount++) printf(" ")
 
 void vfs_init();
 void rootfs_init(filesystem_t* fs);

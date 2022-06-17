@@ -163,12 +163,12 @@ _vfs_lookup(tmpfs) {
     tmpfs_internal_t* tmp_int = dir_node->internal;
 
     // can only get size from TMPFS_TYPE_FILE
-    if (tmp_int->type != TMPFS_TYPE_FILE) return -1;
+    if (tmp_int->type != TMPFS_TYPE_DIR) return -1;
 
     tmpfs_dir_t* tmp_d = tmp_int->data.dir;
 
     // traverse all entries
-    vnode_t* node;
+    vnode_t* node = NULL;
     char* curr_name;
     for (int i = 0; i < tmp_d->size; i++) {
         node = tmp_d->entries[i];
@@ -294,8 +294,8 @@ _vfs_get_size(tmpfs) {
 _vfs_get_name(tmpfs) {
     tmpfs_internal_t* tmp_int = dir_node->internal;
     // strcpy(buf, tmp_int->name);
-    buf = tmp_int->name;
-    return strlen(buf);
+    *buf = tmp_int->name;
+    return strlen(*buf);
 }
 
 _vfs_is_dir(tmpfs) {
@@ -306,4 +306,20 @@ _vfs_is_dir(tmpfs) {
 _vfs_is_file(tmpfs) {
     tmpfs_internal_t* tmp_int = node->internal;
     return tmp_int->type == TMPFS_TYPE_FILE;
+}
+
+_vfs_show_vnode(tmpfs) {
+    tmpfs_internal_t* tmp_int = node->internal;
+    pad(layer);
+    printf("name = \"%s\", mount = 0x%X, ", tmp_int->name, node->mount);
+    if (tmp_int->type == TMPFS_TYPE_DIR) {
+        printf("type = DIR (%d)" ENDL, tmp_int->data.dir->size);
+        for (int i = 0; i < tmp_int->data.dir->size; i++) tmpfs_show_vnode(tmp_int->data.dir->entries[i], layer + 1);
+    } else if (tmp_int->type == TMPFS_TYPE_FILE) {
+        printf("type = FILE \"%s\" (%d)" ENDL, tmp_int->data.file->data, tmp_int->data.file->size);
+    } else {
+        printf("type = UNKNOWN" ENDL);
+    }
+
+    // printf(" - parent = 0x%X" ENDL, node->parent);
 }

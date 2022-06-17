@@ -123,6 +123,85 @@ void sys_sigreturn(trap_frame_t* tf) {
     memcpy(tf, tf->sp_el0, sizeof(trap_frame_t));
 }
 
+int sys_open(trap_frame_t* tf, const char* pathname, int flags) {
+    printf("sys_open(\"%s\", 0x%X)" ENDL, pathname, flags);
+
+    task_struct_t* curr = current;
+    for (int i = 0; i < curr->max_fd; i++) {
+        if (curr->fds[i].vnode != NULL) continue;
+        // find one fd to assign
+        int ret = vfs_open(pathname, flags, &curr->fds[i]);
+
+        // if open failed
+        if (ret < 0) {
+            curr->fds[i].vnode = NULL;
+            printf("OPEN_FAILED!!!!!!!!!!!!!!!!!" ENDL);
+            return ret;
+        }
+        // curr->fds[i].vnode->v_ops->show_vnode(curr->fds[i].vnode, 0);
+        rootfs->root->v_ops->show_vnode(rootfs->root, 0);
+        // tf->x0 = i;
+        return i;
+    }
+
+    // if all fds are full, no fd to open
+    return -1;
+}
+
+int sys_close(trap_frame_t* tf, int fd) {
+    printf("sys_close(%d)" ENDL, fd);
+
+    task_struct_t* curr = current;
+    // check if fd is invalid
+    if (fd < 0) return -1;
+    // if (current->fds[fd].vnode == NULL) return -1;
+    if (curr->fds[fd].vnode == NULL) return -1;
+
+    file_t* f = &curr->fds[fd];
+    // int ret = vfs_close(&current->fds[fd]);
+    int ret = vfs_close(f);
+    if (ret < 0) return ret;
+
+    return 0;
+
+}  // 12
+
+int sys_write(trap_frame_t* tf, int fd, const void* buf, unsigned long count) {
+    printf("sys_write(%d, \"%s\", 0x%X)" ENDL, fd, buf, count);
+    if (fd < 0) return -1;
+
+    task_struct_t* curr = current;
+    if (curr->fds[fd].vnode == NULL) return -1;
+
+    int ret = vfs_write(&curr->fds[fd], buf, count);
+
+    return ret;
+}
+
+int sys_read(trap_frame_t* tf, int fd, void* buf, unsigned long count) {
+    printf("sys_read(%d, 0x%X, 0x%X)" ENDL, fd, buf, count);
+}
+
+int sys_mkdir(trap_frame_t* tf, const char* pathname, unsigned mode) {
+    printf("sys_mkdir(\"%s\", 0x%X)" ENDL, pathname, mode);
+}
+
+int sys_mount(trap_frame_t* tf, const char* src, const char* target, const char* filesystem, unsigned long flags, const void* data) {
+    printf("sys_mount(%s,\"%s\", \"%s\", 0x%X, \"%s\")" ENDL, src, target, filesystem, flags, data);
+}  // 16
+
+int sys_chdir(trap_frame_t* tf, const char* path) {
+    printf("sys_chdir(\"%s\")" ENDL, path);
+}
+
+long sys_lseek64(trap_frame_t* tf, int fd, long offset, int whence) {
+    printf("sys_lseek64(%d, %d, %d)" ENDL, fd, offset, whence);
+}
+
+int sys_ioctl(trap_frame_t* tf, int fd, unsigned long request, ...) {
+    printf("sys_ioctl(%d, %d)" ENDL, fd, request);
+}
+
 void svc_handler(trap_frame_t* tf) {  // handle svc0
     // printf("svc_handler()" ENDL);
 
@@ -189,6 +268,34 @@ void svc_handler(trap_frame_t* tf) {  // handle svc0
             break;
         case 10:
             sys_sigreturn(tf);
+            break;
+        case 11:
+            sys_open(tf, tf->x0, tf->x1);
+            break;
+        case 12:
+            sys_close(tf, tf->x0);
+            break;
+        case 13:
+            // sys_write(tf, tf->x0, tf->x1, tf->x2);
+            break;
+        case 14:
+            sys_read(tf, tf->x0, tf->x1, tf->x2);
+            break;
+        case 15:
+            sys_mkdir(tf, tf->x0, tf->x1);
+            break;
+        case 16:
+            sys_mount(tf, tf->x0, tf->x1, tf->x2, tf->x3, tf->x4);
+            break;
+        case 17:
+            sys_chdir(tf, tf->x0);
+            break;
+        case 18:
+            sys_lseek64(tf, tf->x0, tf->x1, tf->x2);
+            break;
+        case 19:
+            sys_ioctl(tf, tf->x0, tf->x1, tf->x2);
+            break;
         default:
             break;
     }

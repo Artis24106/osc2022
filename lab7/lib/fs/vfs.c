@@ -31,6 +31,7 @@ vnode_t* vfs_get_dir_node_by_name(vnode_t* dir_node, char** path_name) {
             continue;
         }
 
+        // get next component
         while (*end != '/' && *end != '\0') end += 1;
 
         if (*end == '\0') break;
@@ -79,6 +80,7 @@ void rootfs_init(filesystem_t* fs) {
     }
 
     rootfs = kmalloc(sizeof(mount_t));
+    // rootfs = kmalloc(0x1000);
     rootfs->fs = fs;
     rootfs->root = root;
 
@@ -97,26 +99,27 @@ int register_filesystem(filesystem_t* fs) {
 int vfs_open(const char* pathname, int flags, file_t* target) {
     /* 1. Lookup pathname */
     const char* curr_name = pathname;
-    // vnode_t* dir_node = vfs_get_dir_node_by_name(current->work_dir, &curr_name);
-    vnode_t* dir_node = vfs_get_dir_node_by_name(rootfs->root, &curr_name);
+    task_struct_t* curr = current;
+    vnode_t* dir_node = vfs_get_dir_node_by_name(curr->work_dir, &curr_name);
+    // vnode_t* dir_node = vfs_get_dir_node_by_name(rootfs->root, &curr_name);
     if (!dir_node || !curr_name) return -1;
 
     /* 2. Create a new file handle for this vnode if found. */
-    vnode_t* new_f;
-    int ret = dir_node->v_ops->lookup(dir_node, &new_f, curr_name);
+    vnode_t* new_file;
+    int ret = dir_node->v_ops->lookup(dir_node, &new_file, curr_name);
 
     /* 3. Create a new file if O_CREAT is specified in flags and vnode not found
           lookup error code shows if file exist or not or other error occurs */
     /* 4. Return error code if fails */
-    if (false) {  // TODO: check O_CREAT
+    if (flags & O_CREAT) {  // TODO: check O_CREAT
         if (ret == 0) return -1;
-        ret = dir_node->v_ops->create(dir_node, &new_f, curr_name);
+        ret = dir_node->v_ops->create(dir_node, &new_file, curr_name);
     }
     if (ret < 0) return ret;
-    if (!new_f) return -1;
+    if (!new_file) return -1;
 
     // now open the file
-    ret = new_f->f_ops->open(new_f, target);
+    ret = new_file->f_ops->open(new_file, target);
     if (ret < 0) return ret;
 
     target->f_flags = 0;

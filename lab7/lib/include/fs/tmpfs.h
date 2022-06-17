@@ -59,5 +59,6 @@ _vfs_get_size(tmpfs);
 _vfs_get_name(tmpfs);
 _vfs_is_dir(tmpfs);
 _vfs_is_file(tmpfs);
+_vfs_show_vnode(tmpfs);
 
 #endif

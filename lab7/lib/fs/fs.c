@@ -4,14 +4,14 @@ void fs_init() {
     vfs_init();
 
     filesystem_t* tmpfs = tmpfs_init();
-    filesystem_t* cpiofs = cpiofs_init();
+    // filesystem_t* cpiofs = cpiofs_init();
     register_filesystem(tmpfs);
-    register_filesystem(cpiofs);
+    // register_filesystem(cpiofs);
 
     rootfs_init(tmpfs);
 
-    vfs_mkdir("/initramfs");
-    vfs_mount("/initranfs", "cpiofs");
+    // vfs_mkdir("/initramfs");
+    // vfs_mount("/initranfs", "cpiofs");
 
     // printf("-------- start testing ----------" ENDL);
     // char buf[0x100];
