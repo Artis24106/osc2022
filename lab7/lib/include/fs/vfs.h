@@ -82,9 +82,9 @@ filesystem_t* vfs_get_filesystem_by_name(const char* fs_name);
 #define _vfs_show_vnode(fs_name) \
     void fs_name##_show_vnode(vnode_t* node, int layer)
 
-#define pad(layer)  \
-    printf("[-] "); \
-    for (int lcount = 0; lcount < layer * 2; lcount++) printf(" ")
+#define pad(layer)                                                  \
+    for (int lcount = 0; lcount < layer * 2; lcount++) printf(" "); \
+    printf("\x1b[38;5;3m*\x1b[0m ")
 
 void vfs_init();
 void rootfs_init(filesystem_t* fs);

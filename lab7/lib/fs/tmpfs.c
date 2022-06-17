@@ -19,7 +19,7 @@ _vfs_setup_mount(tmpfs) {
     vnode_t* curr_node = mount->root;
     char* name;
 
-    curr_node->v_ops->get_name(curr_node, name);
+    curr_node->v_ops->get_name(curr_node, &name);
 
     tmpfs_dir_t* tmp_d = kmalloc(sizeof(tmpfs_dir_t));
     tmp_d->size = 0;
@@ -311,14 +311,13 @@ _vfs_is_file(tmpfs) {
 _vfs_show_vnode(tmpfs) {
     tmpfs_internal_t* tmp_int = node->internal;
     pad(layer);
-    printf("name = \"%s\", mount = 0x%X, ", tmp_int->name, node->mount);
     if (tmp_int->type == TMPFS_TYPE_DIR) {
-        printf("type = DIR (%d)" ENDL, tmp_int->data.dir->size);
+        printf("\x1b[38;5;1m[DIR]\x1b[0m (%d) -> \x1b[38;5;2m\"%s\"\x1b[0m - 0x%X" ENDL, tmp_int->data.dir->size, tmp_int->name, node->mount);
         for (int i = 0; i < tmp_int->data.dir->size; i++) tmpfs_show_vnode(tmp_int->data.dir->entries[i], layer + 1);
     } else if (tmp_int->type == TMPFS_TYPE_FILE) {
-        printf("type = FILE \"%s\" (%d)" ENDL, tmp_int->data.file->data, tmp_int->data.file->size);
+        printf("\x1b[38;5;4m[FILE]\x1b[0m \x1b[38;5;2m\"%s\"\x1b[0m -> \x1b[38;5;2m\"%s\"\x1b[0m (%d) - 0x%X" ENDL, tmp_int->name, tmp_int->data.file->data, tmp_int->data.file->size, node->mount);
     } else {
-        printf("type = UNKNOWN" ENDL);
+        printf("[UNKNOWN]" ENDL);
     }
 
     // printf(" - parent = 0x%X" ENDL, node->parent);

@@ -126,6 +126,7 @@ void sys_sigreturn(trap_frame_t* tf) {
 int sys_open(trap_frame_t* tf, const char* pathname, int flags) {
     printf("sys_open(\"%s\", 0x%X)" ENDL, pathname, flags);
 
+    // rootfs->root->v_ops->show_vnode(rootfs->root, 0);
     task_struct_t* curr = current;
     for (int i = 0; i < curr->max_fd; i++) {
         if (curr->fds[i].vnode != NULL) continue;
@@ -182,7 +183,6 @@ int sys_read(trap_frame_t* tf, int fd, void* buf, unsigned long count) {
 
     task_struct_t* curr = current;
     if (curr->fds[fd].vnode == NULL) return -1;
-    rootfs->root->v_ops->show_vnode(curr->fds[fd].vnode, 0);
 
     int ret = vfs_read(&curr->fds[fd], buf, count);
 
@@ -191,14 +191,36 @@ int sys_read(trap_frame_t* tf, int fd, void* buf, unsigned long count) {
 
 int sys_mkdir(trap_frame_t* tf, const char* pathname, unsigned mode) {
     printf("sys_mkdir(\"%s\", 0x%X)" ENDL, pathname, mode);
+
+    int ret = vfs_mkdir(pathname);
+    return ret;
 }
 
 int sys_mount(trap_frame_t* tf, const char* src, const char* target, const char* filesystem, unsigned long flags, const void* data) {
+    rootfs->root->v_ops->show_vnode(rootfs->root, 0);
     printf("sys_mount(%s,\"%s\", \"%s\", 0x%X, \"%s\")" ENDL, src, target, filesystem, flags, data);
+    rootfs->root->v_ops->show_vnode(rootfs->root, 0);
+
+    int ret = vfs_mount(target, filesystem);
+
+    return ret;
 }  // 16
 
 int sys_chdir(trap_frame_t* tf, const char* path) {
     printf("sys_chdir(\"%s\")" ENDL, path);
+
+    // find the node to path
+    vnode_t* target;
+    int ret = vfs_lookup(path, &target);
+    if (ret < 0) return ret;
+
+    // the target should be DIR
+    if (!target->v_ops->is_dir(target)) return -1;
+
+    // set current working directory
+    current->work_dir = target;
+
+    return 0;
 }
 
 long sys_lseek64(trap_frame_t* tf, int fd, long offset, int whence) {
