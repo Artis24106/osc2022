@@ -138,8 +138,6 @@ int sys_open(trap_frame_t* tf, const char* pathname, int flags) {
             printf("OPEN_FAILED!!!!!!!!!!!!!!!!!" ENDL);
             return ret;
         }
-        // curr->fds[i].vnode->v_ops->show_vnode(curr->fds[i].vnode, 0);
-        rootfs->root->v_ops->show_vnode(rootfs->root, 0);
         // tf->x0 = i;
         return i;
     }
@@ -180,6 +178,15 @@ int sys_write(trap_frame_t* tf, int fd, const void* buf, unsigned long count) {
 
 int sys_read(trap_frame_t* tf, int fd, void* buf, unsigned long count) {
     printf("sys_read(%d, 0x%X, 0x%X)" ENDL, fd, buf, count);
+    if (fd < 0) return -1;
+
+    task_struct_t* curr = current;
+    if (curr->fds[fd].vnode == NULL) return -1;
+    rootfs->root->v_ops->show_vnode(curr->fds[fd].vnode, 0);
+
+    int ret = vfs_read(&curr->fds[fd], buf, count);
+
+    return ret;
 }
 
 int sys_mkdir(trap_frame_t* tf, const char* pathname, unsigned mode) {
@@ -276,7 +283,7 @@ void svc_handler(trap_frame_t* tf) {  // handle svc0
             sys_close(tf, tf->x0);
             break;
         case 13:
-            // sys_write(tf, tf->x0, tf->x1, tf->x2);
+            sys_write(tf, tf->x0, tf->x1, tf->x2);
             break;
         case 14:
             sys_read(tf, tf->x0, tf->x1, tf->x2);
