@@ -10,8 +10,9 @@ void fs_init() {
 
     rootfs_init(tmpfs);
 
+    rootfs->root->v_ops->show_vnode(rootfs->root, 0);
     vfs_mkdir("/initramfs");
     rootfs->root->v_ops->show_vnode(rootfs->root, 0);
     vfs_mount("/initramfs", "cpiofs");
-    rootfs->root->v_ops->show_vnode(rootfs->root, 0);
+    // rootfs->root->v_ops->show_vnode(rootfs->root, 0);
 }

@@ -196,6 +196,9 @@ void uart_write_callback() {
         uart_disable_int(TX);
         return;
     }
+    // uart_write_string("T: ");
+    // uart_write(rtx_buf + 48);
+    // uart_write_string(ENDL);
     uart_write(rtx_buf[rtx_buf_head++]);
     rtx_buf_head %= MAX_BUF_SIZE;
 

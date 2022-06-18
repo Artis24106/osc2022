@@ -134,3 +134,5 @@ void show_slab_cache() {
 
 void ddd() {
 }
+
+void ggg() { printf("GGGGGGGGGG" ENDL); };

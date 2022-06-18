@@ -147,8 +147,9 @@ int vfs_read(file_t* file, void* buf, size_t len) {
 
 int vfs_mkdir(const char* pathname) {
     vnode_t* dir_node;
-    if (current) {
-        dir_node = vfs_get_dir_node_by_name(current->work_dir, &pathname);
+    task_struct_t* curr = current;
+    if (curr) {
+        dir_node = vfs_get_dir_node_by_name(curr->work_dir, &pathname);
     } else {
         dir_node = vfs_get_dir_node_by_name(rootfs->root, &pathname);
     }

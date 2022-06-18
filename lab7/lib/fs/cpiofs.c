@@ -82,7 +82,7 @@ _vfs_init(cpiofs) {
     // init cpiofs_root_node
     cpiofs_alloc_root(NULL, NULL);
 
-    cpiofs_root_node.v_ops->show_vnode(&cpiofs_root_node, 0);
+    // cpiofs_root_node.v_ops->show_vnode(&cpiofs_root_node, 0);
 
     // parse cpio
     char *cpio_ptr = INITRD_START,
@@ -133,7 +133,7 @@ _vfs_init(cpiofs) {
                 ;
         }
     }
-    cpiofs_root_node.v_ops->show_vnode(&cpiofs_root_node, 0);
+    // cpiofs_root_node.v_ops->show_vnode(&cpiofs_root_node, 0);
 
     return &cpiofs;
 }
@@ -285,8 +285,7 @@ _vfs_create(cpiofs) {
     char* file_name = (char*)dir_node;
     char* file_data = (char*)target;
     uint32_t data_size = *(uint32_t*)component_name;
-    if (data_size < 0x50)
-        printf("[CPIOFS] file_name = '%s', data = '%s', data_size = 0x%X" ENDL, file_name, file_data, data_size);
+    printf("[CPIOFS] file_name = '%s', data = '...', data_size = 0x%X" ENDL, file_name, data_size);
 
     if (!file_name) return -1;
 
@@ -350,7 +349,7 @@ _vfs_mkdir(cpiofs) {
 
     // add to the directory
     list_add_tail(&tmp_int->node, &dir_int->data.dir.node);
-    cpiofs_root_node.v_ops->show_vnode(&cpiofs_root_node, 0);
+    // cpiofs_root_node.v_ops->show_vnode(&cpiofs_root_node, 0);
 }
 
 _vfs_get_size(cpiofs) {

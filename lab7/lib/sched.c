@@ -12,6 +12,10 @@ uint32_t rq_len = 0,
 
 uint64_t current_pid = 1;
 
+void set_current(uint64_t val) {
+    write_sysreg(tpidr_el1, val);
+}
+
 void idle() {
     printf("idle()" ENDL);
     while (true) {

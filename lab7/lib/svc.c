@@ -30,6 +30,7 @@ int64_t sys_uartread(char buf[], int64_t size) {
 
 int64_t sys_uartwrite(const char buf[], int64_t size) {
     if (size == 0) return -1;
+    // printf("sys_uartwrite !!" ENDL);
     // async_uart_putc(buf, size);
     uart_putc(buf, size);
     return size;
@@ -264,7 +265,10 @@ void svc_handler(trap_frame_t* tf) {  // handle svc0
             // for (uint32_t i = 0; i < 0x100000; i++) asm("nop");
             break;
         case 2:
+            // printf("x30: 0x%X" ENDL, tf->x30);
+            // printf("GG: 0x%X" ENDL, *(uint64_t*)(tf->sp_el0 + 0x28));
             sys_uartwrite(tf->x0, tf->x1);
+            tf->x0 = 1;
             // printf(" \b");
             // printf("write 0x%X (0x%X), 0x%X" ENDL, tf->x0, *(char*)tf->x0, tf->x1);
             break;

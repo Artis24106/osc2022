@@ -111,6 +111,7 @@ extern struct list_head rq, wq, dq;
 extern void switch_to(task_struct_t* prev, task_struct_t* next);
 extern task_struct_t* get_current();
 #define current get_current()
+void set_current(uint64_t val);
 
 void idle();
 void kill_zombies();
