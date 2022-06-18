@@ -213,9 +213,28 @@ uint32_t create_kern_task(void (*func)(), void* arg) {
     // enable_intr();
 }
 
-uint32_t create_user_task(void (*func)(), void* arg) {
+uint32_t create_user_task(char* path_name) {
     task_struct_t* task = new_task();
     thread_info_t* info = &task->info;
+    file_t f;
+    int ret;
+
+    // open the file
+    ret = vfs_open(path_name, 0, &f);
+    if (ret < 0) return ret;
+
+    // get file size
+    int file_size = f.vnode->v_ops->get_size(f.vnode);
+    if (file_size < 0) return -1;
+
+    char* file_buf = kmalloc(file_size);
+
+    // read
+    ret = vfs_read(&f, file_buf, file_size);
+    if (ret < 0) return ret;
+
+    // close
+    vfs_close(&f);
 
     // task->pid = current->pid + 1;  // TODO: maybe wrong
     task->pid = current_pid++;
@@ -223,7 +242,7 @@ uint32_t create_user_task(void (*func)(), void* arg) {
     task->prio = 2;
 
     // store entry point
-    info->x19 = func;
+    info->x19 = file_buf;
 
     // malloc user stack
     info->x20 = kmalloc(THREAD_STACK_SIZE);

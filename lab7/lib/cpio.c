@@ -140,7 +140,7 @@ void cpio_exec_sched_callback(char* param, cpio_newc_header_t* header, char* fil
     printf(ENDL);
     memcpy(file_ptr, file_data, data_size);
     printf("create_user_task" ENDL);
-    create_user_task(file_ptr, 0);
+    // create_user_task(file_ptr, 0);
 }
 
 void* cpio_get_file(char* file_name) {

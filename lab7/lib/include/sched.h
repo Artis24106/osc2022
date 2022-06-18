@@ -2,6 +2,7 @@
 #define __SCHED_H__
 
 #include "exec.h"
+#include "fs/vfs.h"
 #include "fs/vfs_type.h"
 #include "list.h"
 #include "lock.h"
@@ -123,7 +124,7 @@ task_struct_t* next_task(task_struct_t* curr);
 task_struct_t* get_task_by_pid(uint32_t pid);
 
 uint32_t create_kern_task(void (*func)(), void* arg);
-uint32_t create_user_task(void (*func)(), void* arg);
+uint32_t create_user_task(char* path_name);
 uint32_t _fork(trap_frame_t* tf);
 task_struct_t* new_task();
 

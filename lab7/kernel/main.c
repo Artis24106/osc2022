@@ -73,15 +73,8 @@ void kernel_main(char* x0) {
     //     create_kern_task(foo, NULL);
     // }
 
-    void* file_ptr = cpio_get_file("./vfs1.img");
-    if (file_ptr == NULL) {
-        printf("[-] syscall.img not found??" ENDL);
-        while (1)
-            ;
-    }
-    printf("[+] syscall.img base: 0x%X" ENDL, file_ptr);
     printf("create_user_task" ENDL);
-    create_user_task(file_ptr, 0);
+    create_user_task("/initramfs/vfs1.img");
 
     // enable interrupts (AUX, uart RX/TX)
     uart_enable_int(RX | TX);
