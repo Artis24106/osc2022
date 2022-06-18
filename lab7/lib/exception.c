@@ -39,7 +39,7 @@ irq_handler_end:
 }
 
 void invalid_handler(uint32_t x0) {
-    // printf("[Invalid Exception] %d" ENDL, x0);
+    printf("[Invalid Exception] %d" ENDL, x0);
     while (1)
         ;
 }

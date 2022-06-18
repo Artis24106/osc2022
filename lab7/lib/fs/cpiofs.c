@@ -14,7 +14,7 @@ static bool cpiofs_mounted;
 declare_ops(cpiofs);
 
 // XXX: FIX!!!!!!!!!!
-vnode_t* get_dir_node_by_name(vnode_t* dir_node, char* path_name) {
+vnode_t* get_dir_node_by_name(vnode_t* dir_node, char** path_name) {
     struct vnode* result;
     const char* start;
     const char* end;
@@ -48,31 +48,28 @@ vnode_t* get_dir_node_by_name(vnode_t* dir_node, char* path_name) {
             end++;
         }
 
-        if (*end == '/') {
-            int ret;
+        if (*end != '/') break;
+        int ret;
 
-            if (start == end) {
-                // Case like "//"
-                end++;
-                start = end;
-                continue;
-            }
-
-            // TODO: Check if the length is less than 0x100
-            memcpy(buf, start, end - start);
-            buf[end - start] = 0;
-
-            ret = result->v_ops->lookup(result, &result, buf);
-
-            if (ret < 0) {
-                return NULL;
-            }
-
+        if (start == end) {
+            // Case like "//"
             end++;
             start = end;
-        } else {
-            break;
+            continue;
         }
+
+        // TODO: Check if the length is less than 0x100
+        memcpy(buf, start, end - start);
+        buf[end - start] = 0;
+
+        ret = result->v_ops->lookup(result, &result, buf);
+
+        if (ret < 0) {
+            return NULL;
+        }
+
+        end++;
+        start = end;
     }
 
     *path_name = *start ? start : NULL;
@@ -85,13 +82,14 @@ _vfs_init(cpiofs) {
     // init cpiofs_root_node
     cpiofs_alloc_root(NULL, NULL);
 
+    cpiofs_root_node.v_ops->show_vnode(&cpiofs_root_node, 0);
+
     // parse cpio
     char *cpio_ptr = INITRD_START,
          *curr_file_name, *curr_file_data;
     uint32_t name_size, data_size;
     uint32_t header_size = sizeof(cpio_newc_header_t);
-    cpio_newc_header_t* header = kmalloc(header_size);
-    void* header_bk = header;
+    cpio_newc_header_t* header;
 
     CPIOFS_TYPE_T file_type;
     void* file_buf = NULL;
@@ -135,7 +133,7 @@ _vfs_init(cpiofs) {
                 ;
         }
     }
-    kfree(header_bk);
+    cpiofs_root_node.v_ops->show_vnode(&cpiofs_root_node, 0);
 
     return &cpiofs;
 }
@@ -145,25 +143,27 @@ _vfs_setup_mount(cpiofs) {
     vnode_t* curr_node = mount->root;
 
     char* name;
-    curr_node->v_ops->get_name(curr_node, name);
+    curr_node->v_ops->get_name(curr_node, &name);
 
     cpiofs_dir_t* tmp_d = kmalloc(sizeof(cpiofs_dir_t));
 
     cpiofs_internal_t* tmp_int = cpiofs_root_node.internal;
     tmp_int->name = name;
 
-    // backup curr_node
+    // backup curr_node for umount
     cpiofs_mount_node_bk.mount = curr_node->mount;
     cpiofs_mount_node_bk.v_ops = curr_node->v_ops;
     cpiofs_mount_node_bk.f_ops = curr_node->f_ops;
     cpiofs_mount_node_bk.parent = curr_node->parent;
     cpiofs_mount_node_bk.internal = curr_node->internal;
 
+    // change mounted vnode info
     curr_node->mount = mount;
     curr_node->v_ops = cpiofs_root_node.v_ops;
     curr_node->f_ops = cpiofs_root_node.f_ops;
-    curr_node->internal = cpiofs_root_node.internal;
+    curr_node->internal = tmp_int;
 
+    // set mounted
     cpiofs_mounted = true;
 
     return 0;
@@ -256,8 +256,8 @@ _vfs_lseek64(cpiofs) {
 
 /* vnode operations */
 _vfs_lookup(cpiofs) {
-    // can only be used in initialization
-    if (cpiofs_mounted) return -1;
+    // // can only be used in initialization
+    // if (cpiofs_mounted) return -1;
 
     cpiofs_internal_t* tmp_int = dir_node->internal;
 
@@ -291,15 +291,15 @@ _vfs_create(cpiofs) {
     if (!file_name) return -1;
 
     // get the directory node to create new file
-    vnode_t* _dir_node = get_dir_node_by_name(&cpiofs_root_node, &file_name);
-    if (!_dir_node) return -1;
+    vnode_t* curr_dir_node = get_dir_node_by_name(&cpiofs_root_node, &file_name);
+    if (!curr_dir_node) return -1;
 
     // should be directory
-    cpiofs_internal_t* dir_int = _dir_node->internal;
+    cpiofs_internal_t* dir_int = curr_dir_node->internal;
     if (dir_int->type != CPIOFS_TYPE_DIR) return -1;
 
     cpiofs_internal_t* tmp_int = kmalloc(sizeof(cpiofs_internal_t));
-    vnode_t* tmp_node = kmalloc(sizeof(tmp_node));
+    vnode_t* tmp_node = kmalloc(sizeof(vnode_t));
 
     tmp_int->name = file_name;
     tmp_int->type = CPIOFS_TYPE_FILE;
@@ -310,7 +310,7 @@ _vfs_create(cpiofs) {
     tmp_node->mount = NULL;
     tmp_node->v_ops = &cpiofs_v_ops;
     tmp_node->f_ops = &cpiofs_f_ops;
-    tmp_node->parent = _dir_node;
+    tmp_node->parent = curr_dir_node;
     tmp_node->internal = tmp_int;
 
     list_add_tail(&tmp_int->node, &dir_int->data.dir.node);
@@ -327,12 +327,12 @@ _vfs_mkdir(cpiofs) {
     if (!dir_name) return -1;
 
     // get the directory node to create new dir
-    vnode_t* _dir_node = get_dir_node_by_name(&cpiofs_root_node, &dir_name);
-    if (!dir_node) return -1;
+    vnode_t* curr_dir_node = get_dir_node_by_name(&cpiofs_root_node, &dir_name);
+    if (!curr_dir_node) return -1;
 
     // should be directory
-    cpiofs_internal_t* dir_int = _dir_node->internal;
-    if (dir_int != CPIOFS_TYPE_DIR) return -1;
+    cpiofs_internal_t* dir_int = curr_dir_node->internal;
+    if (dir_int->type != CPIOFS_TYPE_DIR) return -1;
 
     cpiofs_internal_t* tmp_int = kmalloc(sizeof(cpiofs_internal_t));
     vnode_t* tmp_node = kmalloc(sizeof(vnode_t));
@@ -345,11 +345,12 @@ _vfs_mkdir(cpiofs) {
     tmp_node->mount = NULL;
     tmp_node->v_ops = &cpiofs_v_ops;
     tmp_node->f_ops = &cpiofs_f_ops;
-    tmp_node->parent = _dir_node;
+    tmp_node->parent = curr_dir_node;
     tmp_node->internal = tmp_int;
 
     // add to the directory
-    list_add_tail(&tmp_int->node, &dir_int->node);
+    list_add_tail(&tmp_int->node, &dir_int->data.dir.node);
+    cpiofs_root_node.v_ops->show_vnode(&cpiofs_root_node, 0);
 }
 
 _vfs_get_size(cpiofs) {
@@ -364,8 +365,8 @@ _vfs_get_size(cpiofs) {
 _vfs_get_name(cpiofs) {
     cpiofs_internal_t* tmp_int = dir_node->internal;
 
-    buf = tmp_int->name;
-    return strlen(buf);
+    *buf = tmp_int->name;
+    return strlen(*buf);
 }
 
 _vfs_is_dir(cpiofs) {
@@ -378,4 +379,19 @@ _vfs_is_file(cpiofs) {
     return tmp_int->type == CPIOFS_TYPE_FILE;
 }
 
-_vfs_show_vnode(cpiofs) {}
+_vfs_show_vnode(cpiofs) {
+    cpiofs_internal_t* tmp_int = node->internal;
+    if (layer == 0) printf("\x1b[38;5;4m===== show_vnode() =====\x1b[0m" ENDL);
+    pad(layer);
+    if (tmp_int->type == CPIOFS_TYPE_DIR) {
+        printf("\x1b[38;5;1m[CPIO_DIR]\x1b[0m -> \x1b[38;5;2m\"%s\"\x1b[0m" ENDL, tmp_int->name);
+        cpiofs_internal_t* curr;
+        list_for_each_entry(curr, &tmp_int->data.dir.node, node) {
+            curr->vnode->v_ops->show_vnode(curr->vnode, layer + 1);  // off = 0x28
+        }
+    } else if (tmp_int->type == CPIOFS_TYPE_FILE) {
+        printf("\x1b[38;5;4m[CPIO_FILE]\x1b[0m \x1b[38;5;2m\"%s\"\x1b[0m -> \x1b[38;5;2m\"%s\"\x1b[0m (%d) - 0x%X" ENDL, tmp_int->name, tmp_int->data.file.data, tmp_int->data.file.size, node->mount);
+    } else {
+        printf("[CPIO_UNKNOWN]" ENDL);
+    }
+}

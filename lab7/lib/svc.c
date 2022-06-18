@@ -124,9 +124,8 @@ void sys_sigreturn(trap_frame_t* tf) {
 }
 
 int sys_open(trap_frame_t* tf, const char* pathname, int flags) {
-    printf("sys_open(\"%s\", 0x%X)" ENDL, pathname, flags);
+    // printf("sys_open(\"%s\", 0x%X)" ENDL, pathname, flags);
 
-    // rootfs->root->v_ops->show_vnode(rootfs->root, 0);
     task_struct_t* curr = current;
     for (int i = 0; i < curr->max_fd; i++) {
         if (curr->fds[i].vnode != NULL) continue;
@@ -148,7 +147,7 @@ int sys_open(trap_frame_t* tf, const char* pathname, int flags) {
 }
 
 int sys_close(trap_frame_t* tf, int fd) {
-    printf("sys_close(%d)" ENDL, fd);
+    // printf("sys_close(%d)" ENDL, fd);
 
     task_struct_t* curr = current;
     // check if fd is invalid
@@ -166,7 +165,7 @@ int sys_close(trap_frame_t* tf, int fd) {
 }  // 12
 
 int sys_write(trap_frame_t* tf, int fd, const void* buf, unsigned long count) {
-    printf("sys_write(%d, \"%s\", 0x%X)" ENDL, fd, buf, count);
+    // printf("sys_write(%d, \"%s\", 0x%X)" ENDL, fd, buf, count);
     if (fd < 0) return -1;
 
     task_struct_t* curr = current;
@@ -178,7 +177,7 @@ int sys_write(trap_frame_t* tf, int fd, const void* buf, unsigned long count) {
 }
 
 int sys_read(trap_frame_t* tf, int fd, void* buf, unsigned long count) {
-    printf("sys_read(%d, 0x%X, 0x%X)" ENDL, fd, buf, count);
+    // printf("sys_read(%d, 0x%X, 0x%X)" ENDL, fd, buf, count);
     if (fd < 0) return -1;
 
     task_struct_t* curr = current;
@@ -190,24 +189,20 @@ int sys_read(trap_frame_t* tf, int fd, void* buf, unsigned long count) {
 }
 
 int sys_mkdir(trap_frame_t* tf, const char* pathname, unsigned mode) {
-    printf("sys_mkdir(\"%s\", 0x%X)" ENDL, pathname, mode);
+    // printf("sys_mkdir(\"%s\", 0x%X)" ENDL, pathname, mode);
 
     int ret = vfs_mkdir(pathname);
     return ret;
 }
 
 int sys_mount(trap_frame_t* tf, const char* src, const char* target, const char* filesystem, unsigned long flags, const void* data) {
-    rootfs->root->v_ops->show_vnode(rootfs->root, 0);
-    printf("sys_mount(%s,\"%s\", \"%s\", 0x%X, \"%s\")" ENDL, src, target, filesystem, flags, data);
-    rootfs->root->v_ops->show_vnode(rootfs->root, 0);
-
     int ret = vfs_mount(target, filesystem);
 
     return ret;
 }  // 16
 
 int sys_chdir(trap_frame_t* tf, const char* path) {
-    printf("sys_chdir(\"%s\")" ENDL, path);
+    // printf("sys_chdir(\"%s\")" ENDL, path);
 
     // find the node to path
     vnode_t* target;

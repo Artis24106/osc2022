@@ -310,15 +310,17 @@ _vfs_is_file(tmpfs) {
 
 _vfs_show_vnode(tmpfs) {
     tmpfs_internal_t* tmp_int = node->internal;
+    if (layer == 0) printf("\x1b[38;5;4m===== show_vnode() =====\x1b[0m" ENDL);
     pad(layer);
     if (tmp_int->type == TMPFS_TYPE_DIR) {
         printf("\x1b[38;5;1m[DIR]\x1b[0m (%d) -> \x1b[38;5;2m\"%s\"\x1b[0m - 0x%X" ENDL, tmp_int->data.dir->size, tmp_int->name, node->mount);
-        for (int i = 0; i < tmp_int->data.dir->size; i++) tmpfs_show_vnode(tmp_int->data.dir->entries[i], layer + 1);
+        for (int i = 0; i < tmp_int->data.dir->size; i++) {
+            vnode_t* temp = tmp_int->data.dir->entries[i];
+            temp->v_ops->show_vnode(temp, layer + 1);
+        }
     } else if (tmp_int->type == TMPFS_TYPE_FILE) {
         printf("\x1b[38;5;4m[FILE]\x1b[0m \x1b[38;5;2m\"%s\"\x1b[0m -> \x1b[38;5;2m\"%s\"\x1b[0m (%d) - 0x%X" ENDL, tmp_int->name, tmp_int->data.file->data, tmp_int->data.file->size, node->mount);
     } else {
         printf("[UNKNOWN]" ENDL);
     }
-
-    // printf(" - parent = 0x%X" ENDL, node->parent);
 }
