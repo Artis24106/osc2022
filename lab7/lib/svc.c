@@ -125,7 +125,7 @@ void sys_sigreturn(trap_frame_t* tf) {
 
 int sys_open(trap_frame_t* tf, const char* pathname, int flags) {
     // printf("sys_open(\"%s\", 0x%X)" ENDL, pathname, flags);
-
+    // rootfs->root->v_ops->show_vnode(rootfs->root, 0);
     task_struct_t* curr = current;
     for (int i = 0; i < curr->max_fd; i++) {
         if (curr->fds[i].vnode != NULL) continue;

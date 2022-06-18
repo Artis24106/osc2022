@@ -111,8 +111,7 @@ int vfs_open(const char* pathname, int flags, file_t* target) {
     /* 3. Create a new file if O_CREAT is specified in flags and vnode not found
           lookup error code shows if file exist or not or other error occurs */
     /* 4. Return error code if fails */
-    if (flags & O_CREAT) {  // TODO: check O_CREAT
-        if (ret == 0) return -1;
+    if (flags & O_CREAT && ret == -1) {  // if vnode not found and O_CREAT is set -> create new vnode
         ret = dir_node->v_ops->create(dir_node, &new_file, curr_name);
     }
     if (ret < 0) return ret;
