@@ -136,5 +136,6 @@ void thread_trampoline(void (*func)(), void* argv);
 
 void show_q();
 void show_task(task_struct_t* task);
+void show_tf(trap_frame_t* tf);
 
 #endif

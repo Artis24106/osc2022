@@ -76,6 +76,7 @@ void kernel_main(char* x0) {
 
     printf("create_user_task" ENDL);
     int ret = create_user_task("/initramfs/vfs1.img");
+    // int ret = create_user_task("/initramfs/syscall.img");
     if (ret < 0) {
         printf("[-] create_user_task(\"/initramfs/vfs1.img\"); failed" ENDL);
         while (1)

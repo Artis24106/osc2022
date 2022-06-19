@@ -179,6 +179,7 @@ _vfs_ioctl(fbfs) {
         lfb = (void*)((unsigned long)mbox[28]);
         curr_int->lfb = mbox[28];
         curr_int->lfb_size = mbox[29];
+        printf("lfb: 0x%X" ENDL, lfb);
     } else {
         printf("Unable to set screen resolution to 1024x768x32\n");
         return -1;

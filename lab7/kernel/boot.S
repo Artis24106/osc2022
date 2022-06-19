@@ -227,6 +227,7 @@ _lower_el_aarch64_irq:
 
 _invalid_exception:
     save_all
+    mov     x0, sp
     bl      invalid_handler
     load_all
     eret

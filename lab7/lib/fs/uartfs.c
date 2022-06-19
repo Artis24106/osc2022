@@ -42,12 +42,14 @@ _vfs_alloc_root(uartfs) { return -1; }
 
 /* file operations */
 _vfs_write(uartfs) {
+    // uart_disable_int(TX | RX);
     uart_putc(buf, len);
 
     return len;
 }
 
 _vfs_read(uartfs) {
+    // uart_disable_int(TX | RX);
     uart_read(buf, len);
 
     return len;

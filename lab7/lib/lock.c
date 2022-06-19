@@ -7,7 +7,7 @@ void lock_init() {
 }
 
 void lock() {
-    // printf("[+] lock()" ENDL);
+    printf("[+] lock()" ENDL);
     lock_cnt++;
 }
 

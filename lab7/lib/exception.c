@@ -38,8 +38,9 @@ irq_handler_end:
     // printf("[END] irq_handler()" ENDL);
 }
 
-void invalid_handler(uint32_t x0) {
-    printf("[Invalid Exception] %d" ENDL, x0);
+void invalid_handler(trap_frame_t* tf) {
+    printf("[Invalid Exception]" ENDL);
+    show_tf(tf);
     while (1)
         ;
 }

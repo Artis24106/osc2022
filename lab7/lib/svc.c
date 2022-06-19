@@ -32,20 +32,35 @@ int64_t sys_uartwrite(const char buf[], int64_t size) {
     if (size == 0) return -1;
     // printf("sys_uartwrite !!" ENDL);
     // async_uart_putc(buf, size);
-    uart_putc(buf, size);
+    for (int i = 0; i < size; i++) {
+        uart_putc(buf + i, 1);
+    }
+    // uart_putc(buf, size);
     return size;
 }
 
 int32_t sys_exec(trap_frame_t* tf, const char* name, char* const argv[]) {
     // printf("[DEBUG] sys_exec(%s)" ENDL, name);
-    void* file_ptr = cpio_get_file(name);
-    if (file_ptr == NULL) {
+    // void* file_ptr = cpio_get_file(name);
+    file_t f;
+    int ret = vfs_open(name, 0, &f);
+    if (ret < 0) {
         printf("[-] %s not found??" ENDL, name);
         while (1)
             ;
     }
+
+    int file_size = f.vnode->v_ops->get_size(f.vnode);
+    if (file_size < 0) return -1;
+
+    char* file_buf = kmalloc(file_size);
+    ret = vfs_read(&f, file_buf, file_size);
+    if (ret < 0) return -1;
+
+    vfs_close(&f);
+
     current->pid = current_pid++;
-    tf->x30 = file_ptr;  // x30 is stored for fork
+    tf->x30 = file_buf;  // x30 is stored for fork
 
     tf->sp_el0 = current->user_stack;
     tf->sp_el0 += THREAD_STACK_SIZE;
@@ -293,6 +308,7 @@ void svc_handler(trap_frame_t* tf) {  // handle svc0
     }
 
     enable_intr();
+    // printf("RET: 0x%X" ENDL, tf->x30);
     switch (sys_num) {
         case 0:
             sys_getpid();

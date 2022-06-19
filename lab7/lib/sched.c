@@ -378,8 +378,10 @@ void show_q() {
 uint32_t update_cnt = 0;
 void update_timer() {
     // printf("update_timer(0x%X)\r\n", update_cnt++);
+#ifndef DISABLE_CONTEXT_SWITCH
     set_timeout_rel(5);
     enable_timer();
+#endif
 }
 
 void show_task(task_struct_t* task) {
@@ -393,4 +395,39 @@ void show_task(task_struct_t* task) {
     printf("\t-> user_stack = 0x%X" ENDL, task->user_stack);
     printf("\t-> kernel_stack = 0x%X" ENDL, task->kernel_stack);
     printf(ENDL);
+}
+
+void show_tf(trap_frame_t* tf) {
+    printf(ENDL);
+    printf("x0: 0x%X" ENDL, tf->x0);
+    printf("x1: 0x%X" ENDL, tf->x1);
+    printf("x2: 0x%X" ENDL, tf->x2);
+    printf("x3: 0x%X" ENDL, tf->x3);
+    printf("x4: 0x%X" ENDL, tf->x4);
+    printf("x5: 0x%X" ENDL, tf->x5);
+    printf("x6: 0x%X" ENDL, tf->x6);
+    printf("x7: 0x%X" ENDL, tf->x7);
+    printf("x8: 0x%X" ENDL, tf->x8);
+    printf("x9: 0x%X" ENDL, tf->x9);
+    printf("x10: 0x%X" ENDL, tf->x10);
+    printf("x11: 0x%X" ENDL, tf->x11);
+    printf("x12: 0x%X" ENDL, tf->x12);
+    printf("x13: 0x%X" ENDL, tf->x13);
+    printf("x14: 0x%X" ENDL, tf->x14);
+    printf("x15: 0x%X" ENDL, tf->x15);
+    printf("x16: 0x%X" ENDL, tf->x16);
+    printf("x17: 0x%X" ENDL, tf->x17);
+    printf("x18: 0x%X" ENDL, tf->x18);
+    printf("x19: 0x%X" ENDL, tf->x19);
+    printf("x20: 0x%X" ENDL, tf->x20);
+    printf("x21: 0x%X" ENDL, tf->x21);
+    printf("x22: 0x%X" ENDL, tf->x22);
+    printf("x23: 0x%X" ENDL, tf->x23);
+    printf("x24: 0x%X" ENDL, tf->x24);
+    printf("x25: 0x%X" ENDL, tf->x25);
+    printf("x26: 0x%X" ENDL, tf->x26);
+    printf("x27: 0x%X" ENDL, tf->x27);
+    printf("x28: 0x%X" ENDL, tf->x28);
+    printf("x29: 0x%X" ENDL, tf->x29);
+    printf("x30: 0x%X" ENDL, tf->x30);
 }

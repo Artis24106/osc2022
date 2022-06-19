@@ -23,6 +23,10 @@ ifdef DEBUG_VFS
   CCFLAGS += -DDEBUG_VFS=1 -g
 endif
 
+ifdef DIS_CS
+  CCFLAGS += -DDISABLE_CONTEXT_SWITCH=1 -g
+endif
+
 
 define show
 	@printf "${BLUE}[+]${NC} Building: ${1}\n"
