@@ -1,0 +1,6 @@
+gef-remote host.docker.internal:1234
+dir lib/
+source list_link.py
+b fbfs_write
+b framebufferfs.c:173
+c
