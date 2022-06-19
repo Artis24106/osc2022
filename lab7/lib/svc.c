@@ -125,7 +125,9 @@ void sys_sigreturn(trap_frame_t* tf) {
 }
 
 int sys_open(trap_frame_t* tf, const char* pathname, int flags) {
-    // printf("sys_open(\"%s\", 0x%X)" ENDL, pathname, flags);
+#ifdef DEBUG_VFS
+    printf("sys_open(\"%s\", 0x%X)" ENDL, pathname, flags);
+#endif
     // rootfs->root->v_ops->show_vnode(rootfs->root, 0);
     task_struct_t* curr = current;
     for (int i = 0; i < curr->max_fd; i++) {
@@ -148,7 +150,9 @@ int sys_open(trap_frame_t* tf, const char* pathname, int flags) {
 }
 
 int sys_close(trap_frame_t* tf, int fd) {
-    // printf("sys_close(%d)" ENDL, fd);
+#ifdef DEBUG_VFS
+    printf("sys_close(%d)" ENDL, fd);
+#endif
 
     task_struct_t* curr = current;
     // check if fd is invalid
@@ -166,7 +170,9 @@ int sys_close(trap_frame_t* tf, int fd) {
 }  // 12
 
 int sys_write(trap_frame_t* tf, int fd, const void* buf, unsigned long count) {
-    // printf("sys_write(%d, \"%s\", 0x%X)" ENDL, fd, buf, count);
+#ifdef DEBUG_VFS
+    printf("sys_write(%d, \"%s\", 0x%X)" ENDL, fd, buf, count);
+#endif
     if (fd < 0) return -1;
 
     task_struct_t* curr = current;
@@ -178,7 +184,9 @@ int sys_write(trap_frame_t* tf, int fd, const void* buf, unsigned long count) {
 }
 
 int sys_read(trap_frame_t* tf, int fd, void* buf, unsigned long count) {
-    // printf("sys_read(%d, 0x%X, 0x%X)" ENDL, fd, buf, count);
+#ifdef DEBUG_VFS
+    printf("sys_read(%d, 0x%X, 0x%X)" ENDL, fd, buf, count);
+#endif
     if (fd < 0) return -1;
 
     task_struct_t* curr = current;
@@ -190,20 +198,27 @@ int sys_read(trap_frame_t* tf, int fd, void* buf, unsigned long count) {
 }
 
 int sys_mkdir(trap_frame_t* tf, const char* pathname, unsigned mode) {
-    // printf("sys_mkdir(\"%s\", 0x%X)" ENDL, pathname, mode);
+#ifdef DEBUG_VFS
+    printf("sys_mkdir(\"%s\", 0x%X)" ENDL, pathname, mode);
+#endif
 
     int ret = vfs_mkdir(pathname);
     return ret;
 }
 
 int sys_mount(trap_frame_t* tf, const char* src, const char* target, const char* filesystem, unsigned long flags, const void* data) {
+#ifdef DEBUG_VFS
+    printf("sys_mount(...)" ENDL);
+#endif
     int ret = vfs_mount(target, filesystem);
 
     return ret;
 }  // 16
 
 int sys_chdir(trap_frame_t* tf, const char* path) {
-    // printf("sys_chdir(\"%s\")" ENDL, path);
+#ifdef DEBUG_VFS
+    printf("sys_chdir(\"%s\")" ENDL, path);
+#endif
 
     // find the node to path
     vnode_t* target;
@@ -220,11 +235,15 @@ int sys_chdir(trap_frame_t* tf, const char* path) {
 }
 
 long sys_lseek64(trap_frame_t* tf, int fd, long offset, int whence) {
+#ifdef DEBUG_VFS
     printf("sys_lseek64(%d, %d, %d)" ENDL, fd, offset, whence);
+#endif
 }
 
 int sys_ioctl(trap_frame_t* tf, int fd, unsigned long request, ...) {
+#ifdef DEBUG_VFS
     printf("sys_ioctl(%d, %d)" ENDL, fd, request);
+#endif
 }
 
 void svc_handler(trap_frame_t* tf) {  // handle svc0

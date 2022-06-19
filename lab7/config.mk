@@ -18,6 +18,12 @@ YELLOW = \x1b[38;5;3m
 BLUE = \x1b[38;5;4m
 NC = \x1b[0m
 
+# DEBUG
+ifdef DEBUG_VFS
+  CCFLAGS += -DDEBUG_VFS=1 -g
+endif
+
+
 define show
 	@printf "${BLUE}[+]${NC} Building: ${1}\n"
 endef

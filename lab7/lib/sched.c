@@ -330,6 +330,9 @@ task_struct_t* new_task() {
     task->max_fd = MAX_FD;
     task->work_dir = rootfs->root;
     for (int i = 0; i < MAX_FD; i++) task->fds[i].vnode = NULL;
+    vfs_open("/dev/uart", 0, &task->fds[0]);  // stdin
+    vfs_open("/dev/uart", 0, &task->fds[1]);  // stdout
+    vfs_open("/dev/uart", 0, &task->fds[2]);  // stderr
 
     return task;
 }

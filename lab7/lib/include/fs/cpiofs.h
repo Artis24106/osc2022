@@ -34,7 +34,7 @@ typedef struct cpiofs_internal {
 vnode_t* get_dir_node_by_name(vnode_t* dir_node, char** path_name);
 
 /* filesystem init */
-_vfs_init(tmpfs);
+_vfs_init(cpiofs);
 
 /* filesystem operations */
 _vfs_setup_mount(cpiofs);
