@@ -6,3 +6,4 @@ kernel.elf
 *.o
 !send_kernel.py
 *.bk
+!/rootfs/*
