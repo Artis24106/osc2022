@@ -171,7 +171,7 @@ int sys_close(trap_frame_t* tf, int fd) {
 
 int sys_write(trap_frame_t* tf, int fd, const void* buf, unsigned long count) {
 #ifdef DEBUG_VFS
-    printf("sys_write(%d, \"%s\", 0x%X)" ENDL, fd, buf, count);
+    // printf("sys_write(%d, \"%s\", 0x%X)" ENDL, fd, buf, count);
 #endif
     if (fd < 0) return -1;
 
@@ -236,14 +236,35 @@ int sys_chdir(trap_frame_t* tf, const char* path) {
 
 long sys_lseek64(trap_frame_t* tf, int fd, long offset, int whence) {
 #ifdef DEBUG_VFS
-    printf("sys_lseek64(%d, %d, %d)" ENDL, fd, offset, whence);
+    // printf("sys_lseek64(%d, %d, %d)" ENDL, fd, offset, whence);
 #endif
+    if (fd < 0) return -1;
+    task_struct_t* curr = current;
+    if (curr->fds[fd].vnode == NULL) return -1;
+
+    int ret = vfs_lseek64(&curr->fds[fd], offset, whence);
+
+    return ret;
 }
 
 int sys_ioctl(trap_frame_t* tf, int fd, unsigned long request, ...) {
 #ifdef DEBUG_VFS
     printf("sys_ioctl(%d, %d)" ENDL, fd, request);
 #endif
+    va_list args;
+
+    va_start(args, request);
+
+    if (fd < 0) return -1;
+
+    task_struct_t* curr = current;
+    if (curr->fds[fd].vnode == NULL) return -1;
+
+    int ret = vfs_ioctl(&curr->fds[fd], request, args);
+
+    va_end(args);
+
+    return ret;
 }
 
 void svc_handler(trap_frame_t* tf) {  // handle svc0

@@ -24,6 +24,7 @@ _vfs_open(uartfs);
 _vfs_close(uartfs);
 _vfs_lseek64(uartfs);
 _vfs_show_vnode(uartfs);
+_vfs_ioctl(uartfs);
 
 /* vnode operations */
 _vfs_lookup(uartfs);

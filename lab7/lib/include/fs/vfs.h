@@ -1,6 +1,8 @@
 #ifndef __VFS_H__
 #define __VFS_H__
 
+#include <stdarg.h>
+
 #include "fs/vfs_type.h"
 #include "list.h"
 #include "malloc.h"
@@ -23,6 +25,7 @@ filesystem_t* vfs_get_filesystem_by_name(const char* fs_name);
         gen_ops_param(fs_name, open),               \
         gen_ops_param(fs_name, close),              \
         gen_ops_param(fs_name, lseek64),            \
+        gen_ops_param(fs_name, ioctl),              \
     }
 
 #define gen_v_vops(fs_name)                          \
@@ -62,6 +65,8 @@ filesystem_t* vfs_get_filesystem_by_name(const char* fs_name);
     int fs_name##_close(file_t* file)
 #define _vfs_lseek64(fs_name) \
     long fs_name##_lseek64(file_t* file, long offset, int whence)
+#define _vfs_ioctl(fs_name) \
+    int fs_name##_ioctl(file_t* file, uint64_t request, va_list args)
 
 /* vnode operations */
 #define _vfs_lookup(fs_name) \
@@ -96,5 +101,7 @@ int vfs_read(file_t* file, void* buf, size_t len);
 int vfs_mkdir(const char* pathname);
 int vfs_mount(const char* target, const char* filesystem);
 int vfs_lookup(const char* pathname, vnode_t** target);
+long vfs_lseek64(file_t* file, long offset, int whence);
+int vfs_ioctl(file_t* file, uint64_t request, va_list args);
 
 #endif

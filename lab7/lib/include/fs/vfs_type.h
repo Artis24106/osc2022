@@ -49,6 +49,7 @@ typedef struct file_operations {
     int (*open)(struct vnode* file_node, struct file* target);
     int (*close)(struct file* file);
     long (*lseek64)(struct file* file, long offset, int whence);
+    int (*ioctl)(struct file* file, uint64_t request, va_list args);
 } file_operations_t;
 
 typedef struct vnode_operations {

@@ -158,6 +158,8 @@ _vfs_lseek64(tmpfs) {
     return 0;
 }
 
+_vfs_ioctl(tmpfs) { return -1; }
+
 /* vnode operations */
 _vfs_lookup(tmpfs) {
     tmpfs_internal_t* tmp_int = dir_node->internal;

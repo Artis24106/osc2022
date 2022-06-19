@@ -50,6 +50,7 @@ _vfs_read(tmpfs);
 _vfs_open(tmpfs);
 _vfs_close(tmpfs);
 _vfs_lseek64(tmpfs);
+_vfs_ioctl(tmpfs);
 
 /* vnode operations */
 _vfs_lookup(tmpfs);

@@ -26,6 +26,7 @@ _vfs_setup_mount(uartfs) {
     node_bk->internal = curr_node->internal;
 
     uartfs_internal_t* tmp_int = kmalloc(sizeof(uartfs_internal_t));
+    tmp_int->name = kmalloc(sizeof(name));
     strcpy(tmp_int->name, name);
     tmp_int->old_node = node_bk;
 
@@ -70,12 +71,7 @@ _vfs_close(uartfs) {
 }
 
 _vfs_lseek64(uartfs) { return -1; }
-_vfs_show_vnode(uartfs) {
-    uartfs_internal_t* tmp_int = node->internal;
-    if (layer == 0) printf("\x1b[38;5;4m===== show_vnode() =====\x1b[0m" ENDL);
-    pad(layer);
-    printf("\x1b[38;5;4m[UART]\x1b[0m \x1b[38;5;2m\"%s\"\x1b[0m" ENDL, tmp_int->name);
-}
+_vfs_ioctl(uartfs) { return -1; }
 
 /* vnode operations */
 _vfs_lookup(uartfs) { return -1; }
@@ -91,3 +87,10 @@ _vfs_get_name(uartfs) {
 
 _vfs_is_dir(uartfs) { return -1; }
 _vfs_is_file(uartfs) { return -1; }
+
+_vfs_show_vnode(uartfs) {
+    uartfs_internal_t* tmp_int = node->internal;
+    if (layer == 0) printf("\x1b[38;5;4m===== show_vnode() =====\x1b[0m" ENDL);
+    pad(layer);
+    printf("\x1b[38;5;4m[UART]\x1b[0m \x1b[38;5;2m\"%s\"\x1b[0m" ENDL, tmp_int->name);
+}

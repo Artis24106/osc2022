@@ -216,3 +216,11 @@ int vfs_lookup(const char* pathname, vnode_t** target) {
 
     return 0;
 }
+
+long vfs_lseek64(file_t* file, long offset, int whence) {
+    return file->f_ops->lseek64(file, offset, whence);
+}
+
+int vfs_ioctl(file_t* file, uint64_t request, va_list args) {
+    return file->f_ops->ioctl(file, request, args);
+}

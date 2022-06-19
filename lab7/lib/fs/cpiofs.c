@@ -254,6 +254,8 @@ _vfs_lseek64(cpiofs) {
     return 0;
 }
 
+_vfs_ioctl(cpiofs) { return -1; }
+
 /* vnode operations */
 _vfs_lookup(cpiofs) {
     // // can only be used in initialization
